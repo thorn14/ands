@@ -1,0 +1,28 @@
+{
+  "name": "@ands/ds-adapter-example",
+  "version": "0.1.0",
+  "description": "Example DS adapter: maps a host design system to ANDS contracts (token mapping, component wrappers, audit config)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@ands/contracts": "workspace:*",
+    "@ands/foundation-tokens": "workspace:*",
+    "@ands/foundation-primitives": "workspace:*",
+    "@ands/interaction-kit": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ands.dev/schemas/cli-output/v1.json",
+  "title": "ANDSCliOutput",
+  "description": "Machine-readable output contract for all ANDS CLI commands. Agents parse this JSON; do not rely on stderr/stdout prose.",
+  "type": "object",
+  "required": ["outputVersion", "command", "ok", "exitCode", "summary", "issues"],
+  "additionalProperties": false,
+  "properties": {
+    "outputVersion": {
+      "type": "string",
+      "description": "Output schema version (semver). Pin to this when parsing.",
+      "examples": ["1.0.0"]
+    },
+    "command": {
+      "type": "string",
+      "description": "The CLI sub-command that produced this output.",
+      "enum": ["validate", "audit-tokens", "scaffold"]
+    },
+    "file": {
+      "type": "string",
+      "description": "File path argument (present for validate command)."
+    },
+    "ok": {
+      "type": "boolean",
+      "description": "True if the command completed without errors. Check this first."
+    },
+    "exitCode": {
+      "type": "integer",
+      "description": "Process exit code. 0 = success. See exit-codes.ts for category mapping.",
+      "enum": [0, 1, 2, 3, 4, 5]
+    },
+    "summary": {
+      "type": "string",
+      "description": "Single-line human-readable result summary."
+    },
+    "issues": {
+      "type": "array",
+      "description": "List of issues found. Empty when ok=true.",
+      "items": { "$ref": "#/$defs/Issue" }
+    },
+    "data": {
+      "description": "Command-specific structured output data (present on success).",
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "Issue": {
+      "type": "object",
+      "required": ["category", "code", "message"],
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "type": "string",
+          "description": "Broad issue category for programmatic grouping.",
+          "enum": ["load", "export", "schema", "contract", "token", "scaffold", "internal"]
+        },
+        "code": {
+          "type": "string",
+          "description": "SCREAMING_SNAKE_CASE machine-readable code. Stable across versions.",
+          "examples": [
+            "MODULE_LOAD_FAILURE",
+            "INTENT_EXPORT_MISSING",
+            "ZOD_PARSE_FAILURE",
+            "HARDCODED_TOKEN_VALUE",
+            "UNKNOWN_KIND"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable description of the issue."
+        },
+        "path": {
+          "type": "array",
+          "description": "JSON path to the problematic value within the intent/config object.",
+          "items": { "type": "string" }
+        },
+        "loc": {
+          "type": "object",
+          "description": "Source file location of the issue.",
+          "additionalProperties": false,
+          "properties": {
+            "file": { "type": "string" },
+            "line": { "type": "integer", "minimum": 1 },
+            "col": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "hint": {
+          "type": "string",
+          "description": "Actionable suggestion for fixing the issue. Agents: follow this."
+        }
+      }
+    }
+  }
+}

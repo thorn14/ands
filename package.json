@@ -1,0 +1,16 @@
+{
+  "name": "ands-workspace",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Agent-Native Design System (ANDS) — portable harness for agentic AI consumption",
+  "scripts": {
+    "build": "pnpm -r --sequential build",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r --parallel exec -- rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.2",
+    "typescript": "^5.4.5"
+  },
+  "packageManager": "pnpm@9.1.0"
+}

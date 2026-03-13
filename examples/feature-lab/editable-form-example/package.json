@@ -1,0 +1,30 @@
+{
+  "name": "@ands/editable-form-example",
+  "version": "0.1.0",
+  "description": "Feature Lab proof: extends editable-form pattern with domain-specific fields via ds-adapter-example",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "validate": "node --import tsx/esm ../../packages/ands-cli/src/bin.ts validate ./src/intent.js",
+    "validate:compiled": "ands validate ./dist/intent.js",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@ands/contracts": "workspace:*",
+    "@ands/interaction-kit": "workspace:*",
+    "@ands/ds-adapter-example": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.2",
+    "typescript": "^5.4.5"
+  }
+}
