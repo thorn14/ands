@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsc --build",
     "typecheck": "tsc --noEmit",
-    "validate": "node --import tsx/esm ../../packages/ands-cli/src/bin.ts validate ./src/intent.js",
+    "validate": "node --import tsx/esm ../../../packages/ands-cli/src/bin.ts validate ./src/intent.ts",
     "validate:compiled": "ands validate ./dist/intent.js",
     "clean": "rm -rf dist tsconfig.tsbuildinfo"
   },
