@@ -39,15 +39,27 @@ const gamutThemesSchema = z.record(z.string(), z.record(z.string(), z.number().i
 // Surfaces (semantic token assignments)
 // ---------------------------------------------------------------------------
 
+/** Ramp reference format: "rampName.step" e.g. "neutral.0", "blue.500" */
+const rampRefSchema = z.string().min(1);
+
 const gamutSurfaceSchema = strictObject({
-  /** Background ramp step (per-theme overridable) */
-  bg: z.number().int().optional(),
-  /** Foreground ramp name + step */
-  fg: z.string().optional(),
-  /** Border ramp step */
-  border: z.number().int().optional(),
-  /** Per-theme overrides */
-  themes: z.record(z.string(), z.object({ bg: z.number().int().optional(), fg: z.string().optional() })).optional(),
+  /** Background: ramp reference "rampName.step" (per-theme overridable) */
+  bg: rampRefSchema.optional(),
+  /** Foreground: ramp reference "rampName.step" */
+  fg: rampRefSchema.optional(),
+  /** Border: ramp reference "rampName.step" (per-theme overridable) */
+  border: rampRefSchema.optional(),
+  /** Per-theme overrides for bg, fg, border (same ramp ref format) */
+  themes: z
+    .record(
+      z.string(),
+      z.object({
+        bg: rampRefSchema.optional(),
+        fg: rampRefSchema.optional(),
+        border: rampRefSchema.optional(),
+      }),
+    )
+    .optional(),
 });
 
 const gamutSurfacesSchema = z.record(z.string(), gamutSurfaceSchema);

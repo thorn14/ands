@@ -62,29 +62,29 @@ export function buildGamutTokenIndex(
   // Build ramp lookup: ramp name → step → hex
   const rampMap = buildRampMap(input.ramps);
 
-  // Resolve theme step assignments
-  const themeSteps = input.themes?.[theme] ?? input.themes?.['light'] ?? {};
-
-  // Resolve surface tokens
+  // Resolve surface tokens (bg, fg, border use explicit "rampName.step" refs)
   for (const [surfaceName, surface] of Object.entries(input.surfaces ?? {})) {
     const themeOverride = surface.themes?.[theme];
 
-    // Background
-    const bgStep = themeOverride?.bg ?? surface.bg;
-    if (bgStep !== undefined) {
-      const rampName = themeSteps[surfaceName] !== undefined ? surfaceName : Object.keys(themeSteps)[0];
-      const hex = resolveStep(rampMap, rampName ?? '', bgStep);
+    // Background — explicit ramp ref e.g. "neutral.0"
+    const bgRef = themeOverride?.bg ?? surface.bg;
+    if (bgRef) {
+      const hex = resolveRampRef(rampMap, bgRef);
       if (hex) index[`semantic.bg-${surfaceName}`] = hex;
     }
 
-    // Foreground
+    // Foreground — same format
     const fgRef = themeOverride?.fg ?? surface.fg;
     if (fgRef) {
-      // fgRef format: "rampName.step" e.g. "neutral.900"
-      const [rampName, stepStr] = fgRef.split('.');
-      const step = parseInt(stepStr ?? '0', 10);
-      const hex = resolveStep(rampMap, rampName ?? '', step);
+      const hex = resolveRampRef(rampMap, fgRef);
       if (hex) index[`semantic.fg-${surfaceName}`] = hex;
+    }
+
+    // Border — same format
+    const borderRef = themeOverride?.border ?? surface.border;
+    if (borderRef) {
+      const hex = resolveRampRef(rampMap, borderRef);
+      if (hex) index[`semantic.border-${surfaceName}`] = hex;
     }
   }
 
@@ -117,4 +117,12 @@ function buildRampMap(ramps: GamutRamp[]): RampMap {
 
 function resolveStep(rampMap: RampMap, rampName: string, step: number): string | undefined {
   return rampMap[rampName]?.[step];
+}
+
+/** Parse "rampName.step" and resolve to hex. */
+function resolveRampRef(rampMap: RampMap, ref: string): string | undefined {
+  const [rampName, stepStr] = ref.split('.');
+  const step = parseInt(stepStr ?? '', 10);
+  if (rampName === undefined || Number.isNaN(step)) return undefined;
+  return resolveStep(rampMap, rampName, step);
 }

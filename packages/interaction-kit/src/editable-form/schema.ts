@@ -96,6 +96,17 @@ export const fieldSchema = strictObject({
   visibleInView: z.boolean().optional(),
   /** Whether the field is editable. Defaults to true when absent. */
   editable: z.boolean().optional(),
+}).superRefine((data, ctx) => {
+  const optionTypes = ['select', 'multiselect', 'radio'] as const;
+  if (optionTypes.includes(data.type)) {
+    if (!Array.isArray(data.options) || data.options.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['options'],
+        message: `options is required and must have at least one item when type is "${data.type}".`,
+      });
+    }
+  }
 });
 
 export type FieldDefinition = z.infer<typeof fieldSchema>;
@@ -159,6 +170,27 @@ export const formLogicSchema = strictObject({
    * @default true
    */
   warnOnUnsavedChanges: z.boolean().default(true),
+}).superRefine((data, ctx) => {
+  if (data.onSuccess === 'redirect') {
+    const path = data.successRedirectPath;
+    if (typeof path !== 'string' || path.trim() === '') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['successRedirectPath'],
+        message: 'successRedirectPath is required when onSuccess is "redirect".',
+      });
+    }
+  }
+  if (data.requireConfirmation === true) {
+    const msg = data.confirmationMessage;
+    if (typeof msg !== 'string' || msg.trim() === '') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['confirmationMessage'],
+        message: 'confirmationMessage is required when requireConfirmation is true.',
+      });
+    }
+  }
 });
 
 export type FormLogic = z.infer<typeof formLogicSchema>;

@@ -70,22 +70,37 @@ function testRampStepsAreUnique(input: GamutTokenInput): TestResult[] {
 function testSurfacesReferenceValidRamps(input: GamutTokenInput): TestResult[] {
   const rampNames = new Set(input.ramps.map(r => r.name));
   const results: TestResult[] = [];
+  const hint = `Available ramps: ${[...rampNames].join(', ')}`;
+
+  function checkRampRef(
+    surfaceName: string,
+    ref: string,
+    field: 'fg' | 'bg' | 'border',
+    pathSuffix: string,
+  ): TestResult {
+    const [rampName] = ref.split('.');
+    const passed = rampName ? rampNames.has(rampName) : false;
+    return {
+      name: `surface "${surfaceName}" ${field} references valid ramp`,
+      passed,
+      issue: passed ? undefined : {
+        category: 'contract' as const,
+        code: 'SURFACE_INVALID_RAMP_REF',
+        message: `Surface "${surfaceName}" ${field} references unknown ramp "${rampName ?? ref}"`,
+        path: [`surfaces.${surfaceName}.${pathSuffix}`],
+        hint,
+      },
+    };
+  }
 
   for (const [surfaceName, surface] of Object.entries(input.surfaces ?? {})) {
-    if (surface.fg) {
-      const [rampName] = surface.fg.split('.');
-      const passed = rampName ? rampNames.has(rampName) : true;
-      results.push({
-        name: `surface "${surfaceName}" fg references valid ramp`,
-        passed,
-        issue: passed ? undefined : {
-          category: 'contract' as const,
-          code: 'SURFACE_INVALID_RAMP_REF',
-          message: `Surface "${surfaceName}" fg references unknown ramp "${rampName}"`,
-          path: [`surfaces.${surfaceName}.fg`],
-          hint: `Available ramps: ${[...rampNames].join(', ')}`,
-        },
-      });
+    if (surface.fg) results.push(checkRampRef(surfaceName, surface.fg, 'fg', 'fg'));
+    if (surface.bg) results.push(checkRampRef(surfaceName, surface.bg, 'bg', 'bg'));
+    if (surface.border) results.push(checkRampRef(surfaceName, surface.border, 'border', 'border'));
+    for (const [themeName, override] of Object.entries(surface.themes ?? {})) {
+      if (override.fg) results.push(checkRampRef(surfaceName, override.fg, 'fg', `themes.${themeName}.fg`));
+      if (override.bg) results.push(checkRampRef(surfaceName, override.bg, 'bg', `themes.${themeName}.bg`));
+      if (override.border) results.push(checkRampRef(surfaceName, override.border, 'border', `themes.${themeName}.border`));
     }
   }
 

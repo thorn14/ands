@@ -68,7 +68,7 @@ function traverseGroup(node: unknown, path: string, errors: TokenValidationError
     errors.push({
       path,
       message: `Expected an object, got ${Array.isArray(node) ? 'array' : typeof node}`,
-      code: 'MISSING_VALUE',
+      code: 'INVALID_VALUE_TYPE',
     });
     return;
   }
@@ -104,7 +104,7 @@ function traverseGroup(node: unknown, path: string, errors: TokenValidationError
     if (!isValidTokenName(key)) {
       errors.push({
         path: path ? `${path}.${key}` : key,
-        message: `Invalid token name "${key}". Must match /^[a-zA-Z0-9][a-zA-Z0-9_-]*$/ and must not start with "$", contain "." or "{}"`,
+        message: `Invalid token name "${key}". Must be lowercase alphanumeric with hyphens/underscores only; must not start with "$", contain "." or "{}"`,
         code: 'INVALID_NAME',
       });
       continue;

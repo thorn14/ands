@@ -14,7 +14,7 @@
 
 import { writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { referenceTokens } from './tokens.js';
 import { flattenTokens } from './validator.js';
 
@@ -105,4 +105,6 @@ export function runBuild(): void {
 }
 
 // Run when executed directly
-runBuild();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  runBuild();
+}
