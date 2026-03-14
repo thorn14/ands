@@ -238,6 +238,7 @@ export async function runAuditTokens(config: AuditConfig = {}): Promise<number> 
   // Scan files
   const issues: Issue[] = [];
 
+  let violationCount = 0;
   for (const filePath of filesToScan) {
     let content: string;
     try {
@@ -289,18 +290,19 @@ export async function runAuditTokens(config: AuditConfig = {}): Promise<number> 
       } else {
         issues.push(issue);
       }
+      violationCount++;
     }
   }
 
   // In stream mode, emit a final summary line and return
   if (streamMode) {
-    const ok = issues.length === 0; // issues array is empty in stream mode
+    const ok = violationCount === 0;
     process.stdout.write(
       JSON.stringify({
         type: 'summary',
         ok,
         filesScanned: filesToScan.length,
-        violations: 0, // violations were already streamed
+        violations: violationCount,
       }) + '\n',
     );
     return ok ? ExitCode.Success : ExitCode.ContractRuleFailure;
@@ -314,9 +316,9 @@ export async function runAuditTokens(config: AuditConfig = {}): Promise<number> 
       ok ? ExitCode.Success : ExitCode.ContractRuleFailure,
       ok
         ? `No violations found (${filesToScan.length} file(s) scanned)`
-        : `Found ${issues.length} hardcoded token value(s) in ${filesToScan.length} file(s)`,
+        : `Found ${violationCount} hardcoded token value(s) in ${filesToScan.length} file(s)`,
       issues,
-      { data: { filesScanned: filesToScan.length, violations: issues.length } },
+      { data: { filesScanned: filesToScan.length, violations: violationCount } },
     ),
   );
 }
