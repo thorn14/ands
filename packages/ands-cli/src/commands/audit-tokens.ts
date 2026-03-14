@@ -255,12 +255,8 @@ export async function runAuditTokens(config: AuditConfig = {}): Promise<number> 
       // Skip allowed literals
       if (allowedLiterals.has(value) || allowedLiterals.has(valueLower)) continue;
 
-      // Skip if this occurrence is part of a proper token access pattern
-      // Check surrounding context (±100 chars)
-      const contextStart = Math.max(0, index - 60);
-      const contextEnd = Math.min(content.length, index + value.length + 60);
-      const context = content.slice(contextStart, contextEnd);
-      const isProperAccess = tokenAccessPatterns.some(re => re.test(context));
+      // Skip if this literal itself is a proper token access (e.g. var(--...), TOKEN_...)
+      const isProperAccess = tokenAccessPatterns.some(re => re.test(value));
       if (isProperAccess) continue;
 
       // Check if this value matches a known token value
