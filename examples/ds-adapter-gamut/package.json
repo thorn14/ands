@@ -1,0 +1,39 @@
+{
+  "name": "@ands/ds-adapter-gamut",
+  "version": "0.1.0",
+  "description": "ANDS adapter for gamut-all — surface-based semantic tokens with WCAG/APCA compliance",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@ands/ands-cli": "workspace:*",
+    "@ands/contracts": "workspace:*",
+    "@ands/foundation-primitives": "workspace:*",
+    "@ands/foundation-tokens": "workspace:*",
+    "@ands/interaction-kit": "workspace:*",
+    "zod": "^3.22.4"
+  },
+  "peerDependencies": {
+    "@gamut-all/core": ">=0.1.0"
+  },
+  "peerDependenciesMeta": {
+    "@gamut-all/core": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.4.5"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@ands/foundation-tokens",
+  "version": "0.1.0",
+  "description": "DTCG/W3C-compatible token authoring, validation, and build outputs (CSS vars, TS constants, JSON index)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./dist/*": "./dist/*"
+  },
+  "scripts": {
+    "build": "tsc --build && node --input-type=module --eval \"import('./dist/build.js').then(m => m.runBuild())\"",
+    "build:tokens": "tsx src/build.ts",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@ands/contracts": "workspace:*",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "tsx": "^4.7.2",
+    "typescript": "^5.4.5"
+  }
+}
