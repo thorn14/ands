@@ -11,7 +11,7 @@
  * **Swapping DS:** Replace these globs and patterns to match your host DS.
  */
 
-import type { AuditConfig } from '@ands/ands-cli';
+import type { AuditConfig } from '@ands/contracts';
 
 /**
  * Audit configuration for projects using AcmeDS.

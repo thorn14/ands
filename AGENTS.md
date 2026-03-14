@@ -112,22 +112,27 @@ export default { plugins: [gamutPlugin] };
 
 ## Architectural Boundary Rules
 
-Violating these will cause build failures and lint errors:
+**ANDS core packages** (`packages/`) are published to npm and never changed for adapter-specific needs:
+- `@ands/contracts` — branded types, Result, AndsPlugin interface, AuditConfig
+- `@ands/foundation-tokens` — DTCG token schema + validator
+- `@ands/foundation-primitives` — Button/Input component contracts
+- `@ands/interaction-kit` — UX pattern schemas
+- `@ands/ands-cli` — the `ands` CLI tool
+
+**Adapters live outside ANDS core.** A design system team creates `@mycompany/ands-adapter` in their own repo, importing from the above npm packages. The `examples/ds-adapter-*` packages demonstrate the pattern.
 
 ```
-Foundation (Rigid)       ← contracts, foundation-tokens, foundation-primitives
+Foundation (Rigid)             ← contracts, foundation-tokens, foundation-primitives
    ↑ imports allowed
-Interaction Kit (Structural)  ← interaction-kit
+Interaction Kit (Structural)   ← interaction-kit
    ↑ imports allowed
-Feature Lab (Flexible)   ← your feature code, examples/
-   ↑ imports allowed
-DS Adapter               ← ds-adapter-* packages
+Feature Lab / Adapters         ← your feature code, examples/, external @mycompany/ands-adapter
 ```
 
 - **Foundation** must NOT import Interaction Kit or Feature Lab
 - **Interaction Kit** must NOT import Feature Lab
 - **Feature Lab** imports Interaction Kit + Adapters (not preset primitives directly)
-- **Adapters** import Foundation + Interaction Kit
+- **Adapters** import Foundation + Interaction Kit only; no circular imports
 
 ---
 
@@ -170,10 +175,11 @@ const bad: ButtonProps = {};  // TYPE ERROR
 ## File Navigation Index
 
 ```
-packages/
+packages/                         ← ANDS core: published to npm
   contracts/src/
     index.ts                      ← Core contracts (start here for types)
     plugin.ts                     ← AndsPlugin interface (extension contract)
+    audit.ts                      ← AuditConfig — implement in your adapter
   foundation-tokens/src/
     schema.ts                     ← DTCG token format
     tokens.ts                     ← Reference token values (preset)
@@ -199,13 +205,14 @@ packages/
       audit-tokens.ts             ← ands audit-tokens (supports --stream NDJSON)
       scaffold.ts                 ← ands scaffold (supports --dry-run)
       schema.ts                   ← ands schema — runtime introspection
-  ds-adapter-example/src/
+examples/                         ← Reference implementations (not published as ANDS core)
+  ds-adapter-example/src/         ← REFERENCE: how to build @mycompany/ands-adapter
     token-map.ts                  ← Host DS token → ANDS path mapping
     components/
       button.ts                   ← Host DS Button → ButtonContract
       input.ts                    ← Host DS Input → InputContract
     audit-config.ts               ← AuditConfig for host DS
-  ds-adapter-gamut/src/
+  ds-adapter-gamut/src/           ← REFERENCE: gamut-all adapter + plugin commands
     plugin.ts                     ← gamut AndsPlugin export (declare in ands.config.ts)
     token-schema.ts               ← gamut-all JSON input format (Zod)
     token-map.ts                  ← gamut registry → ANDS TokenIndex
@@ -214,7 +221,6 @@ packages/
     commands/
       compliance.ts               ← ands run compliance <file>
       test.ts                     ← ands run test [file]
-examples/
   feature-lab/
     editable-form-example/src/
       intent.ts                   ← PORTABILITY PROOF — extends editable-form

@@ -17,7 +17,6 @@
     "clean": "rm -rf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
-    "@ands/ands-cli": "workspace:^",
     "@ands/contracts": "workspace:*",
     "@ands/foundation-primitives": "workspace:*",
     "@ands/foundation-tokens": "workspace:*",

@@ -19,57 +19,12 @@
 
 import { readFileSync, readdirSync, statSync } from 'fs';
 import { join, relative } from 'path';
+import type { AuditConfig } from '@ands/contracts';
 import { ExitCode } from '../exit-codes.js';
 import { makeOutput, emitOutput, emitIssueNdjson } from '../output.js';
 import type { Issue, IssueLoc } from '../output.js';
 
-// ---------------------------------------------------------------------------
-// Audit configuration (adapter-injectable)
-// ---------------------------------------------------------------------------
-
-/**
- * Configuration for the audit-tokens command.
- * DS adapters provide this to customize file scanning.
- */
-export interface AuditConfig {
-  /**
-   * Root directory for scanning. Defaults to `process.cwd()`.
-   */
-  rootDir?: string;
-  /**
-   * Stream issues as NDJSON (one JSON line per violation) instead of buffering
-   * all violations into a single output object. Triggered by `--stream` flag.
-   * Keeps agent context window usage proportional to violations found, not files scanned.
-   * @default false
-   */
-  stream?: boolean;
-  /**
-   * Subdirectory glob patterns relative to rootDir.
-   * Defaults to ['src'].
-   */
-  scanDirs?: string[];
-  /**
-   * File extensions to scan.
-   * @default ['.css', '.ts', '.tsx', '.js', '.jsx', '.scss']
-   */
-  extensions?: string[];
-  /**
-   * Literal values that are always allowed (not violations).
-   * Typical examples: 'transparent', 'inherit', 'currentColor', 'none', '0', '0px'
-   */
-  allowedLiterals?: string[];
-  /**
-   * Regex patterns matching "proper" token access (these are NOT violations).
-   * E.g. `var(--color-brand-primary)` in CSS.
-   * @default [/var\(--[a-z0-9-]+\)/, /TOKEN_[A-Z0-9_]+/]
-   */
-  tokenAccessPatterns?: RegExp[];
-  /**
-   * Path to the tokens.index.json file.
-   * @default 'packages/foundation-tokens/dist/tokens.index.json'
-   */
-  tokenIndexPath?: string;
-}
+export type { AuditConfig };
 
 const DEFAULT_ALLOWED_LITERALS = new Set([
   'transparent',
@@ -103,7 +58,7 @@ const DEFAULT_ALLOWED_LITERALS = new Set([
   'default',
 ]);
 
-const DEFAULT_TOKEN_ACCESS_PATTERNS = [
+const DEFAULT_TOKEN_ACCESS_PATTERNS: RegExp[] = [
   /var\(--[a-z0-9-]+\)/,         // CSS custom property usage
   /TOKEN_[A-Z][A-Z0-9_]*/,       // TypeScript constant
   /tokens\.[a-z]/,               // token object property access

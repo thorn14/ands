@@ -27,7 +27,7 @@
 export { runCli } from './cli.js';
 export { runValidate } from './commands/validate.js';
 export { runAuditTokens } from './commands/audit-tokens.js';
-export type { AuditConfig } from './commands/audit-tokens.js';
+export type { AuditConfig } from '@ands/contracts';
 export { runScaffold } from './commands/scaffold.js';
 export type { ScaffoldOptions } from './commands/scaffold.js';
 export { runSchema } from './commands/schema.js';

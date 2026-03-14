@@ -24,3 +24,4 @@ export * from './result.js';
 export * from './assert-never.js';
 export * from './zod-helpers.js';
 export * from './plugin.js';
+export * from './audit.js';

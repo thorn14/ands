@@ -6,7 +6,7 @@
  * gamut uses surface-based CSS variables: var(--bg-brand), var(--fg-primary), etc.
  */
 
-import type { AuditConfig } from '@ands/ands-cli';
+import type { AuditConfig } from '@ands/contracts';
 
 export const gamutAuditConfig: AuditConfig = {
   scanDirs: ['src', 'components', 'features'],

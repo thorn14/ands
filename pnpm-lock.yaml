@@ -15,6 +15,59 @@ importers:
         specifier: ^5.4.5
         version: 5.9.3
 
+  examples/ds-adapter-example:
+    dependencies:
+      '@ands/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@ands/foundation-primitives':
+        specifier: workspace:*
+        version: link:../../packages/foundation-primitives
+      '@ands/foundation-tokens':
+        specifier: workspace:*
+        version: link:../../packages/foundation-tokens
+      '@ands/interaction-kit':
+        specifier: workspace:*
+        version: link:../../packages/interaction-kit
+    devDependencies:
+      '@types/node':
+        specifier: ^25.5.0
+        version: 25.5.0
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
+  examples/ds-adapter-gamut:
+    dependencies:
+      '@ands/ands-cli':
+        specifier: workspace:*
+        version: link:../../packages/ands-cli
+      '@ands/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@ands/foundation-primitives':
+        specifier: workspace:*
+        version: link:../../packages/foundation-primitives
+      '@ands/foundation-tokens':
+        specifier: workspace:*
+        version: link:../../packages/foundation-tokens
+      '@ands/interaction-kit':
+        specifier: workspace:*
+        version: link:../../packages/interaction-kit
+      '@gamut-all/core':
+        specifier: '>=0.1.0'
+        version: 0.1.1
+      zod:
+        specifier: ^3.22.4
+        version: 3.25.76
+    devDependencies:
+      '@types/node':
+        specifier: ^25.5.0
+        version: 25.5.0
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
   examples/feature-lab/editable-form-example:
     dependencies:
       '@ands/contracts':
@@ -22,7 +75,7 @@ importers:
         version: link:../../../packages/contracts
       '@ands/ds-adapter-example':
         specifier: workspace:*
-        version: link:../../../packages/ds-adapter-example
+        version: link:../../ds-adapter-example
       '@ands/interaction-kit':
         specifier: workspace:*
         version: link:../../../packages/interaction-kit
@@ -41,7 +94,7 @@ importers:
         version: link:../../../packages/contracts
       '@ands/ds-adapter-gamut':
         specifier: workspace:*
-        version: link:../../../packages/ds-adapter-gamut
+        version: link:../../ds-adapter-gamut
       '@ands/interaction-kit':
         specifier: workspace:*
         version: link:../../../packages/interaction-kit
@@ -81,62 +134,6 @@ importers:
         specifier: ^3.22.4
         version: 3.25.76
     devDependencies:
-      typescript:
-        specifier: ^5.4.5
-        version: 5.9.3
-
-  packages/ds-adapter-example:
-    dependencies:
-      '@ands/ands-cli':
-        specifier: workspace:^
-        version: link:../ands-cli
-      '@ands/contracts':
-        specifier: workspace:*
-        version: link:../contracts
-      '@ands/foundation-primitives':
-        specifier: workspace:*
-        version: link:../foundation-primitives
-      '@ands/foundation-tokens':
-        specifier: workspace:*
-        version: link:../foundation-tokens
-      '@ands/interaction-kit':
-        specifier: workspace:*
-        version: link:../interaction-kit
-    devDependencies:
-      '@types/node':
-        specifier: ^25.5.0
-        version: 25.5.0
-      typescript:
-        specifier: ^5.4.5
-        version: 5.9.3
-
-  packages/ds-adapter-gamut:
-    dependencies:
-      '@ands/ands-cli':
-        specifier: workspace:*
-        version: link:../ands-cli
-      '@ands/contracts':
-        specifier: workspace:*
-        version: link:../contracts
-      '@ands/foundation-primitives':
-        specifier: workspace:*
-        version: link:../foundation-primitives
-      '@ands/foundation-tokens':
-        specifier: workspace:*
-        version: link:../foundation-tokens
-      '@ands/interaction-kit':
-        specifier: workspace:*
-        version: link:../interaction-kit
-      '@gamut-all/core':
-        specifier: '>=0.1.0'
-        version: 0.1.1
-      zod:
-        specifier: ^3.22.4
-        version: 3.25.76
-    devDependencies:
-      '@types/node':
-        specifier: ^25.5.0
-        version: 25.5.0
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
