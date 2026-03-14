@@ -97,7 +97,7 @@ export const fieldSchema = strictObject({
   /** Whether the field is editable. Defaults to true when absent. */
   editable: z.boolean().optional(),
 }).superRefine((data, ctx) => {
-  const optionTypes = ['select', 'multiselect', 'radio'] as const;
+  const optionTypes: readonly string[] = ['select', 'multiselect', 'radio'];
   if (optionTypes.includes(data.type)) {
     if (!Array.isArray(data.options) || data.options.length === 0) {
       ctx.addIssue({
