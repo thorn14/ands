@@ -41,32 +41,56 @@ You MUST follow this cycle for every task:
 
 ## CLI Governor Loop
 
-All ANDS CLI commands output JSON to stdout. **Always parse JSON — never eyeball prose.**
+All ANDS CLI commands output JSON to stdout when piped. **Always parse JSON — never eyeball prose.**
 
 ```bash
+# Introspect commands at runtime (call this first — agents: no need to read docs)
+ands schema                           # list all commands + registered patterns
+ands schema validate                  # args + output shape for validate
+ands schema scaffold                  # available patterns + args
+
 # Validate an intent file
 ands validate ./src/features/user-profile/intent.js
 
 # Audit for hardcoded token values (zero violations = clean)
 ands audit-tokens
+ands audit-tokens --stream            # NDJSON: one Issue per line (large codebases)
 
 # Scaffold a new feature
 ands scaffold --pattern editable-form --output ./src/features/my-form --name my-form
+ands scaffold --pattern editable-form --output ./src/my-form --name my-form --dry-run  # preview files
+
+# Run plugin commands (registered in ands.config.ts)
+ands run test                         # plugin test command — agents never call pnpm test directly
+ands run compliance src/tokens.json   # gamut WCAG compliance check
 
 # Parse output programmatically
 ands validate ./intent.js | jq '.ok, .issues'
 ands validate ./intent.js | jq '.exitCode'  # 0 = success
+
+# issues[].suggestion — concrete next command, not prose
+ands validate ./intent.js | jq '.issues[].suggestion'
+```
+
+### Plugin extension (ands.config.ts)
+
+```ts
+// ands.config.ts — declare in project root to extend the CLI
+import { gamutPlugin } from '@ands/ds-adapter-gamut';
+export default { plugins: [gamutPlugin] };
+// Now `ands run compliance` and `ands run test` are available
 ```
 
 ### Exit codes (stable)
-| Code | Meaning |
-|------|---------|
-| 0 | Success |
-| 1 | Module load failure (check path/syntax) |
-| 2 | Intent export missing or invalid shape |
-| 3 | Zod schema parse failure |
-| 4 | Contract rule violation |
-| 5 | Internal CLI error |
+| Code | Meaning | Retry? |
+|------|---------|--------|
+| 0 | Success | — |
+| 1 | Module load failure (check path/syntax) | No — fix first |
+| 2 | Intent export missing or invalid shape | No — fix first |
+| 3 | Zod schema parse failure | No — fix first |
+| 4 | Contract rule violation | No — fix first |
+| 5 | Internal CLI error | No — investigate |
+| 6 | Transient error (network, file lock) | Yes — exponential backoff |
 
 ---
 
@@ -147,7 +171,9 @@ const bad: ButtonProps = {};  // TYPE ERROR
 
 ```
 packages/
-  contracts/src/index.ts          ← Core contracts (start here for types)
+  contracts/src/
+    index.ts                      ← Core contracts (start here for types)
+    plugin.ts                     ← AndsPlugin interface (extension contract)
   foundation-tokens/src/
     schema.ts                     ← DTCG token format
     tokens.ts                     ← Reference token values (preset)
@@ -162,24 +188,44 @@ packages/
       schema.ts                   ← Intent shape (Zod + TS)
       state-machine.ts            ← State/event union types
       reducer.ts                  ← Pure reducer + selectors
+      scaffold-template.ts        ← Scaffold files for editable-form
   ands-cli/src/
     output-schema.json            ← CLI output contract (JSON Schema)
-    exit-codes.ts                 ← Stable exit code mapping
+    exit-codes.ts                 ← Stable exit code mapping (0–6)
+    config.ts                     ← ands.config.ts loader
+    registry.ts                   ← Runtime pattern + command registry
     commands/
       validate.ts                 ← ands validate implementation
-      audit-tokens.ts             ← ands audit-tokens implementation
-      scaffold.ts                 ← ands scaffold implementation
+      audit-tokens.ts             ← ands audit-tokens (supports --stream NDJSON)
+      scaffold.ts                 ← ands scaffold (supports --dry-run)
+      schema.ts                   ← ands schema — runtime introspection
   ds-adapter-example/src/
     token-map.ts                  ← Host DS token → ANDS path mapping
     components/
       button.ts                   ← Host DS Button → ButtonContract
       input.ts                    ← Host DS Input → InputContract
     audit-config.ts               ← AuditConfig for host DS
+  ds-adapter-gamut/src/
+    plugin.ts                     ← gamut AndsPlugin export (declare in ands.config.ts)
+    token-schema.ts               ← gamut-all JSON input format (Zod)
+    token-map.ts                  ← gamut registry → ANDS TokenIndex
+    compliance.ts                 ← WCAG contrast checker → ANDS Issue[]
+    audit-config.ts               ← AuditConfig for gamut CSS var patterns
+    commands/
+      compliance.ts               ← ands run compliance <file>
+      test.ts                     ← ands run test [file]
 examples/
   feature-lab/
     editable-form-example/src/
       intent.ts                   ← PORTABILITY PROOF — extends editable-form
       reducer.ts                  ← Feature-specific reducer
+    gamut-form-example/
+      ands.config.ts              ← PLUGIN PROOF — declares gamutPlugin
+      src/
+        gamut-tokens.json         ← gamut-all token input
+        intent.ts                 ← same editable-form shape, gamut-styled
+        reducer.ts                ← delegates to core reducer
+        styles.css                ← gamut surface vars only (zero hardcoded values)
 ```
 
 ---

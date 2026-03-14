@@ -46,33 +46,32 @@ interface RenderedElement {
 // ---------------------------------------------------------------------------
 
 function mapInputProps(props: InputProps): AcmeTextFieldProps {
-  const sizeMap: Record<NonNullable<InputProps['size']>, AcmeTextFieldProps['size']> = {
+  const sizeMap: Record<NonNullable<InputProps['size']>, NonNullable<AcmeTextFieldProps['size']>> = {
     sm: 'small',
     md: 'medium',
     lg: 'large',
   };
 
-  return {
+  const mapped: AcmeTextFieldProps = {
     name: props.name,
     inputType: props.type ?? 'text',
-    label: 'label' in props ? props.label : undefined,
-    ariaLabel: props['aria-label'],
-    ariaLabelledBy: props['aria-labelledby'],
-    placeholder: props.placeholder,
-    value: props.value,
-    defaultValue: props.defaultValue,
-    required: props.required,
-    disabled: props.disabled,
-    readOnly: props.readOnly,
-    size: props.size ? sizeMap[props.size] : 'medium',
-    errorText: props.error,
-    helperText: props.hint,
-    className: props.className,
-    onChange: props.onChange
-      ? (e) => props.onChange!(e.target.value)
-      : undefined,
-    onBlur: props.onBlur,
+    size: props.size ? sizeMap[props.size]! : 'medium',
   };
+  if ('label' in props) mapped.label = props.label;
+  if (props['aria-label'] !== undefined) mapped.ariaLabel = props['aria-label'];
+  if (props['aria-labelledby'] !== undefined) mapped.ariaLabelledBy = props['aria-labelledby'];
+  if (props.placeholder !== undefined) mapped.placeholder = props.placeholder;
+  if (props.value !== undefined) mapped.value = props.value;
+  if (props.defaultValue !== undefined) mapped.defaultValue = props.defaultValue;
+  if (props.required !== undefined) mapped.required = props.required;
+  if (props.disabled !== undefined) mapped.disabled = props.disabled;
+  if (props.readOnly !== undefined) mapped.readOnly = props.readOnly;
+  if (props.error !== undefined) mapped.errorText = props.error;
+  if (props.hint !== undefined) mapped.helperText = props.hint;
+  if (props.className !== undefined) mapped.className = props.className;
+  if (props.onChange !== undefined) mapped.onChange = (e) => props.onChange!(e.target.value);
+  if (props.onBlur !== undefined) mapped.onBlur = props.onBlur;
+  return mapped;
 }
 
 // ---------------------------------------------------------------------------
@@ -84,7 +83,7 @@ function mapInputProps(props: InputProps): AcmeTextFieldProps {
  */
 export const Input: InputContract = (props: InputProps): RenderedElement => {
   if (typeof process !== 'undefined' && process.env['NODE_ENV'] !== 'production') {
-    const a11y = validateInputAccessibility(props as Record<string, unknown>);
+    const a11y = validateInputAccessibility(props as unknown as Record<string, unknown>);
     if (!a11y.valid) {
       console.warn(`[ands/ds-adapter-example/Input] ${a11y.reason}`);
     }

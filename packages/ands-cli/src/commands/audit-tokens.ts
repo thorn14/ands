@@ -20,7 +20,7 @@
 import { readFileSync, readdirSync, statSync } from 'fs';
 import { join, relative } from 'path';
 import { ExitCode } from '../exit-codes.js';
-import { makeOutput, emitOutput } from '../output.js';
+import { makeOutput, emitOutput, emitIssueNdjson } from '../output.js';
 import type { Issue, IssueLoc } from '../output.js';
 
 // ---------------------------------------------------------------------------
@@ -36,6 +36,13 @@ export interface AuditConfig {
    * Root directory for scanning. Defaults to `process.cwd()`.
    */
   rootDir?: string;
+  /**
+   * Stream issues as NDJSON (one JSON line per violation) instead of buffering
+   * all violations into a single output object. Triggered by `--stream` flag.
+   * Keeps agent context window usage proportional to violations found, not files scanned.
+   * @default false
+   */
+  stream?: boolean;
   /**
    * Subdirectory glob patterns relative to rootDir.
    * Defaults to ['src'].
@@ -169,6 +176,7 @@ export async function runAuditTokens(config: AuditConfig = {}): Promise<number> 
   const rootDir = config.rootDir ?? process.cwd();
   const scanDirs = config.scanDirs ?? ['src'];
   const extensions = config.extensions ?? ['.css', '.ts', '.tsx', '.js', '.jsx', '.scss'];
+  const streamMode = config.stream ?? false;
   const allowedLiterals = new Set([
     ...DEFAULT_ALLOWED_LITERALS,
     ...(config.allowedLiterals ?? []),
@@ -265,7 +273,7 @@ export async function runAuditTokens(config: AuditConfig = {}): Promise<number> 
       const { line, col } = getLineCol(content, index);
       const relPath = relative(rootDir, filePath);
 
-      issues.push({
+      const issue: Issue = {
         category: 'token',
         code: 'HARDCODED_TOKEN_VALUE',
         message: `Hardcoded value "${value}" should be accessed via token variable`,
@@ -274,8 +282,28 @@ export async function runAuditTokens(config: AuditConfig = {}): Promise<number> 
           `Use CSS variable: var(--${matchingPaths[0]?.replace(/\./g, '-') ?? ''}) ` +
           `or TS constant: TOKEN_${(matchingPaths[0] ?? '').toUpperCase().replace(/[.\-]/g, '_')}. ` +
           `Matching token path(s): ${matchingPaths.slice(0, 3).join(', ')}`,
-      });
+      };
+
+      if (streamMode) {
+        emitIssueNdjson(issue);
+      } else {
+        issues.push(issue);
+      }
     }
+  }
+
+  // In stream mode, emit a final summary line and return
+  if (streamMode) {
+    const ok = issues.length === 0; // issues array is empty in stream mode
+    process.stdout.write(
+      JSON.stringify({
+        type: 'summary',
+        ok,
+        filesScanned: filesToScan.length,
+        violations: 0, // violations were already streamed
+      }) + '\n',
+    );
+    return ok ? ExitCode.Success : ExitCode.ContractRuleFailure;
   }
 
   const ok = issues.length === 0;
@@ -306,7 +334,7 @@ export function parseAuditArgs(args: string[]): AuditTokensArgs {
   const result: AuditTokensArgs = { config: {} };
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--token-index' && args[i + 1]) {
-      result.config!.tokenIndexPath = args[i + 1];
+      result.config!.tokenIndexPath = args[i + 1]!;
       i++;
     } else if (args[i] === '--dir' && args[i + 1]) {
       result.config!.scanDirs = args[i + 1]!.split(',');
@@ -314,6 +342,8 @@ export function parseAuditArgs(args: string[]): AuditTokensArgs {
     } else if (args[i] === '--allow' && args[i + 1]) {
       result.config!.allowedLiterals = args[i + 1]!.split(',');
       i++;
+    } else if (args[i] === '--stream') {
+      result.config!.stream = true;
     }
   }
   return result;

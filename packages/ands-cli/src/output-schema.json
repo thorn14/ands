@@ -15,7 +15,7 @@
     "command": {
       "type": "string",
       "description": "The CLI sub-command that produced this output.",
-      "enum": ["validate", "audit-tokens", "scaffold"]
+      "enum": ["validate", "audit-tokens", "scaffold", "schema", "run"]
     },
     "file": {
       "type": "string",
@@ -27,8 +27,8 @@
     },
     "exitCode": {
       "type": "integer",
-      "description": "Process exit code. 0 = success. See exit-codes.ts for category mapping.",
-      "enum": [0, 1, 2, 3, 4, 5]
+      "description": "Process exit code. 0 = success. See exit-codes.ts for category mapping. 6 = transient (retry); 1-5 = permanent (fix first).",
+      "enum": [0, 1, 2, 3, 4, 5, 6]
     },
     "summary": {
       "type": "string",
@@ -53,7 +53,7 @@
         "category": {
           "type": "string",
           "description": "Broad issue category for programmatic grouping.",
-          "enum": ["load", "export", "schema", "contract", "token", "scaffold", "internal"]
+          "enum": ["load", "export", "schema", "contract", "token", "scaffold", "plugin", "compliance", "internal"]
         },
         "code": {
           "type": "string",
@@ -63,7 +63,9 @@
             "INTENT_EXPORT_MISSING",
             "ZOD_PARSE_FAILURE",
             "HARDCODED_TOKEN_VALUE",
-            "UNKNOWN_KIND"
+            "UNKNOWN_KIND",
+            "WCAG_CONTRAST_FAILURE",
+            "APCA_CONTRAST_FAILURE"
           ]
         },
         "message": {
@@ -87,7 +89,16 @@
         },
         "hint": {
           "type": "string",
-          "description": "Actionable suggestion for fixing the issue. Agents: follow this."
+          "description": "Actionable prose suggestion for fixing the issue."
+        },
+        "suggestion": {
+          "type": "string",
+          "description": "Concrete next CLI command for agents to run as a recovery step. Always a runnable ands command.",
+          "examples": [
+            "ands schema validate",
+            "ands scaffold --pattern editable-form --output ./src/my-form --name my-form",
+            "ands run test"
+          ]
         }
       }
     }

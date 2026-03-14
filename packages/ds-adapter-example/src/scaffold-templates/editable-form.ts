@@ -69,9 +69,8 @@ function renderField(field: FieldDefinition): RenderedField {
     name: field.id,
     type: field.type === 'textarea' ? 'text' : (field.type as 'text'),
     required: field.required,
-    placeholder: field.placeholder,
-    defaultValue:
-      typeof field.defaultValue === 'string' ? field.defaultValue : undefined,
+    ...(field.placeholder !== undefined ? { placeholder: field.placeholder } : {}),
+    ...(typeof field.defaultValue === 'string' ? { defaultValue: field.defaultValue } : {}),
   });
 
   return { id: field.id, element };

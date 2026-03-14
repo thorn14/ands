@@ -5,7 +5,38 @@
 
 ---
 
-## Current Plan: Initial Implementation (All Phases)
+## Extension System + Agent-Friendly CLI + gamut-all Plugin (Completed)
+
+See `research.md` § Extension System for the full design.
+
+### Summary of changes
+
+| File | Change |
+|------|--------|
+| `packages/contracts/src/plugin.ts` | NEW — AndsPlugin, PatternRegistration, PluginCommand, AndsConfig |
+| `packages/contracts/src/index.ts` | Export plugin.ts |
+| `packages/ands-cli/src/exit-codes.ts` | Add exitCode 6 (TransientError) |
+| `packages/ands-cli/src/output.ts` | Add suggestion field, TTY detection, emitIssueNdjson |
+| `packages/ands-cli/src/output-schema.json` | Add suggestion, run/schema commands, exitCode 6, compliance category |
+| `packages/ands-cli/src/config.ts` | NEW — loadConfig() |
+| `packages/ands-cli/src/registry.ts` | NEW — buildRegistry() |
+| `packages/ands-cli/src/commands/schema.ts` | NEW — ands schema [command] |
+| `packages/ands-cli/src/commands/validate.ts` | Use registry instead of SCHEMA_REGISTRY |
+| `packages/ands-cli/src/commands/scaffold.ts` | Use registry + --dry-run |
+| `packages/ands-cli/src/commands/audit-tokens.ts` | Add --stream NDJSON |
+| `packages/ands-cli/src/cli.ts` | Load config, build registry, dispatch run/schema |
+| `packages/ands-cli/src/index.ts` | Export new modules |
+| `packages/interaction-kit/src/editable-form/scaffold-template.ts` | NEW — extracted template |
+| `packages/interaction-kit/src/index.ts` | Export scaffold template |
+| `packages/ds-adapter-gamut/` | NEW — full gamut adapter + plugin |
+| `examples/feature-lab/gamut-form-example/` | NEW — portability proof |
+| `AGENTS.md` | Updated CLI governor loop, file index, exit codes |
+| `research.md` | Added Extension System section |
+| `plan.md` | This update |
+
+---
+
+## Previous Plan: Initial Implementation (All Phases)
 
 ### Context
 Build the complete ANDS monorepo from scratch following the contract-first,

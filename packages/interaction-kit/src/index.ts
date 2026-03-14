@@ -78,3 +78,6 @@ export {
   getFieldErrors,
   getFormErrors,
 } from './editable-form/reducer.js';
+
+// Editable Form — Scaffold Template (used by ands-cli registry)
+export { editableFormScaffoldFiles } from './editable-form/scaffold-template.js';

@@ -185,9 +185,10 @@ export function flattenTokens(
     ) {
       // Leaf token
       const leaf = val as { $value: string | number; $type?: string };
+      const resolvedType = leaf.$type ?? inheritedType;
       result[path] = {
         value: leaf.$value,
-        type: leaf.$type ?? inheritedType,
+        ...(resolvedType !== undefined ? { type: resolvedType } : {}),
       };
     } else if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
       // Nested group — recurse

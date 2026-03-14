@@ -1,0 +1,79 @@
+{
+  "version": "1.0.0",
+  "ramps": [
+    {
+      "name": "blue",
+      "steps": [
+        { "step": 50, "hex": "#EFF6FF", "luminance": 0.94 },
+        { "step": 100, "hex": "#DBEAFE", "luminance": 0.86 },
+        { "step": 200, "hex": "#BFDBFE", "luminance": 0.74 },
+        { "step": 400, "hex": "#60A5FA", "luminance": 0.42 },
+        { "step": 600, "hex": "#2563EB", "luminance": 0.18 },
+        { "step": 800, "hex": "#1E40AF", "luminance": 0.08 },
+        { "step": 900, "hex": "#1E3A8A", "luminance": 0.04 }
+      ]
+    },
+    {
+      "name": "neutral",
+      "steps": [
+        { "step": 0,   "hex": "#FFFFFF", "luminance": 1.0 },
+        { "step": 50,  "hex": "#F9FAFB", "luminance": 0.96 },
+        { "step": 100, "hex": "#F3F4F6", "luminance": 0.91 },
+        { "step": 200, "hex": "#E5E7EB", "luminance": 0.82 },
+        { "step": 500, "hex": "#6B7280", "luminance": 0.22 },
+        { "step": 700, "hex": "#374151", "luminance": 0.07 },
+        { "step": 900, "hex": "#111827", "luminance": 0.02 }
+      ]
+    },
+    {
+      "name": "red",
+      "steps": [
+        { "step": 50,  "hex": "#FEF2F2", "luminance": 0.94 },
+        { "step": 100, "hex": "#FEE2E2", "luminance": 0.86 },
+        { "step": 400, "hex": "#F87171", "luminance": 0.38 },
+        { "step": 600, "hex": "#DC2626", "luminance": 0.13 },
+        { "step": 900, "hex": "#7F1D1D", "luminance": 0.03 }
+      ]
+    }
+  ],
+  "themes": {
+    "light": {
+      "surface": 0,
+      "brand": 600,
+      "danger": 600
+    },
+    "dark": {
+      "surface": 900,
+      "brand": 400,
+      "danger": 400
+    }
+  },
+  "surfaces": {
+    "surface": {
+      "bg": 0,
+      "fg": "neutral.900",
+      "border": 200,
+      "themes": {
+        "dark": { "bg": 900, "fg": "neutral.100" }
+      }
+    },
+    "brand": {
+      "bg": 600,
+      "fg": "neutral.0",
+      "themes": {
+        "dark": { "bg": 400, "fg": "neutral.900" }
+      }
+    },
+    "danger": {
+      "bg": 600,
+      "fg": "neutral.0",
+      "themes": {
+        "dark": { "bg": 400, "fg": "neutral.900" }
+      }
+    }
+  },
+  "compliance": {
+    "level": "AA",
+    "engine": "wcag21"
+  }
+}

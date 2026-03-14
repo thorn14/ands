@@ -13,6 +13,11 @@
  * | 3    | SchemaParseFailure    | Zod schema parse failed (intent has invalid data) |
  * | 4    | ContractRuleFailure   | Non-Zod structural constraint violated            |
  * | 5    | InternalError         | Unexpected error in the CLI itself                |
+ * | 6    | TransientError        | Retriable failure (network, file lock, timeout)   |
+ *
+ * **Retry guidance for agents:**
+ * - Exit codes 1–5: permanent failures — do NOT retry, fix the underlying issue
+ * - Exit code 6: transient failure — retry with exponential backoff (2s, 4s, 8s, 16s)
  *
  * For `audit-tokens`:
  * | 0    | Success               | No violations found                               |
@@ -30,6 +35,7 @@ export const ExitCode = {
   SchemaParseFailure: 3,
   ContractRuleFailure: 4,
   InternalError: 5,
+  TransientError: 6,
 } as const;
 
 export type ExitCode = (typeof ExitCode)[keyof typeof ExitCode];
@@ -41,4 +47,5 @@ export const EXIT_CODE_DESCRIPTIONS: Record<ExitCode, string> = {
   [ExitCode.SchemaParseFailure]: 'Intent failed Zod schema validation',
   [ExitCode.ContractRuleFailure]: 'Intent or tokens violate a structural contract rule',
   [ExitCode.InternalError]: 'Unexpected internal CLI error',
+  [ExitCode.TransientError]: 'Transient failure — retry with exponential backoff',
 };

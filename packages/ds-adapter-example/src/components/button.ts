@@ -44,33 +44,33 @@ interface RenderedElement {
 // ---------------------------------------------------------------------------
 
 function mapButtonProps(props: ButtonProps): AcmeButtonProps {
-  const variantMap: Record<NonNullable<ButtonProps['variant']>, AcmeButtonProps['variant']> = {
+  const variantMap: Record<NonNullable<ButtonProps['variant']>, NonNullable<AcmeButtonProps['variant']>> = {
     primary: 'primary',
     secondary: 'secondary',
     ghost: 'ghost',
     destructive: 'danger',
   };
 
-  const sizeMap: Record<NonNullable<ButtonProps['size']>, AcmeButtonProps['size']> = {
+  const sizeMap: Record<NonNullable<ButtonProps['size']>, NonNullable<AcmeButtonProps['size']>> = {
     sm: 'small',
     md: 'medium',
     lg: 'large',
   };
 
-  return {
-    // Accessible name mapping
-    label: typeof props.children === 'string' ? props.children : undefined,
-    ariaLabel: props['aria-label'],
-    ariaLabelledBy: props['aria-labelledby'],
-    // Other props
-    variant: props.variant ? variantMap[props.variant] : 'primary',
-    size: props.size ? sizeMap[props.size] : 'medium',
-    disabled: props.disabled ?? props.loading,
-    loading: props.loading,
-    onClick: props.onClick,
+  const mapped: AcmeButtonProps = {
+    variant: props.variant ? variantMap[props.variant]! : 'primary',
+    size: props.size ? sizeMap[props.size]! : 'medium',
     type: props.type ?? 'button',
-    className: props.className,
   };
+  if (typeof props.children === 'string') mapped.label = props.children;
+  if (props['aria-label'] !== undefined) mapped.ariaLabel = props['aria-label'];
+  if (props['aria-labelledby'] !== undefined) mapped.ariaLabelledBy = props['aria-labelledby'];
+  const disabledVal = props.disabled ?? props.loading;
+  if (disabledVal !== undefined) mapped.disabled = disabledVal;
+  if (props.loading !== undefined) mapped.loading = props.loading;
+  if (props.onClick !== undefined) mapped.onClick = props.onClick;
+  if (props.className !== undefined) mapped.className = props.className;
+  return mapped;
 }
 
 // ---------------------------------------------------------------------------
@@ -84,7 +84,7 @@ function mapButtonProps(props: ButtonProps): AcmeButtonProps {
 export const Button: ButtonContract = (props: ButtonProps): RenderedElement => {
   // Runtime a11y check (dev-only; TypeScript handles compile-time)
   if (typeof process !== 'undefined' && process.env['NODE_ENV'] !== 'production') {
-    const a11y = validateButtonAccessibility(props as Record<string, unknown>);
+    const a11y = validateButtonAccessibility(props as unknown as Record<string, unknown>);
     if (!a11y.valid) {
       console.warn(`[ands/ds-adapter-example/Button] ${a11y.reason}`);
     }

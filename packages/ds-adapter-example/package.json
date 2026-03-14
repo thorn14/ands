@@ -17,12 +17,14 @@
     "clean": "rm -rf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@ands/ands-cli": "workspace:^",
     "@ands/contracts": "workspace:*",
-    "@ands/foundation-tokens": "workspace:*",
     "@ands/foundation-primitives": "workspace:*",
+    "@ands/foundation-tokens": "workspace:*",
     "@ands/interaction-kit": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "^25.5.0",
     "typescript": "^5.4.5"
   }
 }

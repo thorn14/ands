@@ -151,6 +151,65 @@ This separation means the same intent can be rendered by any adapter.
 
 ---
 
+## Extension System
+
+ANDS core is frozen. Third parties extend it by publishing an `AndsPlugin` object and declaring it in `ands.config.ts`. No core modifications required.
+
+### Plugin contract (`packages/contracts/src/plugin.ts`)
+
+```ts
+interface AndsPlugin {
+  name: string;
+  patterns?: PatternRegistration[];  // new intent.kind values + schemas
+  commands?: PluginCommand[];        // new `ands run <name>` commands
+}
+```
+
+### Config file (`ands.config.ts` in project root)
+
+```ts
+import { gamutPlugin } from '@ands/ds-adapter-gamut';
+export default { adapter: '@mycompany/my-ds', plugins: [gamutPlugin] };
+```
+
+### Runtime flow
+
+1. CLI loads `ands.config.ts` via dynamic import at startup
+2. `buildRegistry(plugins)` merges core patterns + plugin patterns/commands
+3. All commands receive the registry — no hardcoded imports
+
+### Agent-first CLI guarantees
+
+All plugin commands MUST:
+- Emit ANDS JSON to stdout (same `output-schema.json` contract as built-ins)
+- Return stable exit code (0 = ok, 4 = failure, 6 = transient/retry)
+
+This means agents run `ands run test` instead of `pnpm test` — same loop, any toolchain.
+
+Additional agent-friendly features added:
+- `ands schema [command]` — runtime introspection without reading docs
+- `--dry-run` on scaffold — preview files before writing
+- `--stream` on audit-tokens — NDJSON (one Issue per line, context-window efficient)
+- `issues[].suggestion` — concrete next CLI command (not prose)
+- TTY detection — human-readable in terminal, JSON when piped
+- Exit code 6 — transient errors that are safe to retry
+
+### gamut-all as first plugin (`packages/ds-adapter-gamut/`)
+
+gamut-all is a token production engine (generates WCAG-compliant semantic surface tokens).
+It integrates as a plugin — not baked into CLI or foundation packages.
+
+```bash
+# Once declared in ands.config.ts:
+ands run test src/gamut-tokens.json       # token consistency tests
+ands run compliance src/gamut-tokens.json # WCAG AA contrast checks
+ands audit-tokens                          # no hardcoded surface values
+```
+
+See: `packages/ds-adapter-gamut/src/plugin.ts`, `examples/feature-lab/gamut-form-example/ands.config.ts`
+
+---
+
 ## Current Status
 
 | Phase | Status | Notes |
@@ -162,3 +221,7 @@ This separation means the same intent can be rendered by any adapter.
 | Phase D (agent loop files) | ✅ | AGENTS.md, CLAUDE.md, research.md, plan.md |
 | Adapter example | ✅ | ds-adapter-example with AcmeDS simulation |
 | Feature Lab proof | ✅ | editable-form-example validates via `ands validate` |
+| Extension system | ✅ | AndsPlugin interface, ands.config.ts, registry, `ands run` |
+| Agent-friendly CLI | ✅ | schema cmd, dry-run, NDJSON, suggestion field, TTY detect |
+| gamut-all plugin | ✅ | ds-adapter-gamut with compliance + test commands |
+| gamut Feature Lab proof | ✅ | gamut-form-example with ands.config.ts |

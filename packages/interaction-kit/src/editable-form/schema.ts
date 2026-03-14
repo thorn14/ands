@@ -92,10 +92,10 @@ export const fieldSchema = strictObject({
     pattern: z.string().optional(), // regex pattern string
     custom: z.string().optional(), // free-text description for adapter-specific validation
   }).optional(),
-  /** Whether the field is visible in the initial (non-editing) view. @default true */
-  visibleInView: z.boolean().default(true),
-  /** Whether the field is editable. @default true */
-  editable: z.boolean().default(true),
+  /** Whether the field is visible in the initial (non-editing) view. Defaults to true when absent. */
+  visibleInView: z.boolean().optional(),
+  /** Whether the field is editable. Defaults to true when absent. */
+  editable: z.boolean().optional(),
 });
 
 export type FieldDefinition = z.infer<typeof fieldSchema>;

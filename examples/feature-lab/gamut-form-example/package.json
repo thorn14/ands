@@ -1,13 +1,10 @@
 {
-  "name": "@ands/ands-cli",
+  "name": "@ands/gamut-form-example",
   "version": "0.1.0",
-  "description": "ANDS Governor CLI: validate intents, audit tokens, scaffold features",
+  "description": "Feature Lab proof: editable-form using gamut-all surface tokens + plugin extension system",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "bin": {
-    "ands": "./dist/bin.js"
-  },
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -17,16 +14,18 @@
   "scripts": {
     "build": "tsc --build",
     "typecheck": "tsc --noEmit",
-    "dev": "tsx src/bin.ts",
+    "validate": "node --import tsx/esm ../../../packages/ands-cli/src/bin.ts validate ./src/intent.ts",
+    "validate:compiled": "ands validate ./dist/intent.js",
+    "test": "ands run test src/gamut-tokens.json",
+    "compliance": "ands run compliance src/gamut-tokens.json",
     "clean": "rm -rf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
     "@ands/contracts": "workspace:*",
     "@ands/interaction-kit": "workspace:*",
-    "zod": "^3.22.4"
+    "@ands/ds-adapter-gamut": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^25.5.0",
     "tsx": "^4.7.2",
     "typescript": "^5.4.5"
   }
