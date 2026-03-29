@@ -12,7 +12,7 @@
  */
 
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { ExitCode } from '../exit-codes.js';
 import { makeOutput, emitOutput } from '../output.js';
 import type { RuntimeRegistry } from '../registry.js';
@@ -129,6 +129,7 @@ export async function runScaffold(options: ScaffoldOptions, registry: RuntimeReg
     const written: string[] = [];
     for (const { filename, content } of filesToWrite) {
       const filePath = join(outputDir, filename);
+      mkdirSync(dirname(filePath), { recursive: true });
       writeFileSync(filePath, content);
       written.push(filename);
     }

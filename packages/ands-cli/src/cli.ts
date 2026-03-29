@@ -10,19 +10,23 @@
  * 2. Build RuntimeRegistry from core patterns + plugin patterns/commands
  * 3. Dispatch to the appropriate command handler with the registry
  *
- * **Stable exit codes** — see exit-codes.ts.
- * **Output schema** — see output-schema.json.
- * **Agent tip** — run `ands schema` to introspect all commands at runtime.
+ * **Two-tier dispatch:**
+ * - Tier 1: Built-in commands (validate, audit-tokens, scaffold, schema, init)
+ * - Tier 2: Plugin-registered top-level commands (ands <name>)
+ * - Tier 3: Plugin-registered run commands (ands run <name>)
  */
 
 import { loadConfig } from './config.js';
 import { buildRegistry } from './registry.js';
+import type { RuntimeRegistry } from './registry.js';
 import { runValidate, VALIDATE_HELP } from './commands/validate.js';
 import { runAuditTokens, parseAuditArgs, AUDIT_TOKENS_HELP } from './commands/audit-tokens.js';
 import { runScaffold, parseScaffoldArgs, SCAFFOLD_HELP } from './commands/scaffold.js';
 import { runSchema, SCHEMA_HELP } from './commands/schema.js';
+import { runInit } from './commands/init.js';
 import { ExitCode } from './exit-codes.js';
 import { makeOutput, emitOutput } from './output.js';
+import type { AndsConfig } from '@ands/contracts';
 
 // ---------------------------------------------------------------------------
 // CLI entry point
@@ -32,7 +36,7 @@ export async function runCli(argv: string[]): Promise<void> {
   const [command, ...rest] = argv;
 
   // Load config + build registry at startup
-  let config;
+  let config: AndsConfig;
   try {
     config = await loadConfig();
   } catch (e) {
@@ -53,13 +57,18 @@ export async function runCli(argv: string[]): Promise<void> {
       ),
     );
     process.exit(ExitCode.InternalError);
-    return; // unreachable but satisfies TypeScript narrowing
+    return;
   }
 
-  const registry = buildRegistry(config.plugins ?? [], config.adapter);
+  // Filter out ExcludeDirective items from plugins before building registry
+  const plugins = (config.plugins ?? []).filter(
+    (p): p is Exclude<typeof p, { exclude: string }> => !('exclude' in p),
+  );
+
+  const registry = buildRegistry(plugins, config.adapter);
 
   try {
-    const exitCode = await dispatch(command, rest, registry);
+    const exitCode = await dispatch(command, rest, registry, config);
     process.exit(exitCode);
   } catch (e) {
     const exitCode = emitOutput(
@@ -88,7 +97,8 @@ export async function runCli(argv: string[]): Promise<void> {
 async function dispatch(
   command: string | undefined,
   args: string[],
-  registry: ReturnType<typeof buildRegistry>,
+  registry: RuntimeRegistry,
+  config: AndsConfig,
 ): Promise<number> {
   switch (command) {
     case 'validate': {
@@ -105,8 +115,8 @@ async function dispatch(
         process.stderr.write(AUDIT_TOKENS_HELP + '\n');
         return ExitCode.Success;
       }
-      const { config } = parseAuditArgs(args);
-      return runAuditTokens(config);
+      const { config: auditConfig } = parseAuditArgs(args);
+      return runAuditTokens(auditConfig);
     }
 
     case 'scaffold': {
@@ -139,7 +149,24 @@ async function dispatch(
         process.stderr.write(SCHEMA_HELP + '\n');
         return ExitCode.Success;
       }
+      // Handle `ands schema --config` to print resolved config
+      if (args[0] === '--config') {
+        return emitOutput(
+          makeOutput(
+            'schema',
+            true,
+            ExitCode.Success,
+            'Resolved configuration',
+            [],
+            { data: { config: config as unknown as Record<string, unknown> } },
+          ),
+        );
+      }
       return runSchema(args[0], registry);
+    }
+
+    case 'init': {
+      return runInit(args);
     }
 
     case 'run': {
@@ -189,6 +216,28 @@ async function dispatch(
     }
 
     default: {
+      // Check top-level commands from plugins
+      const tlc = registry.topLevelCommands[command];
+      if (tlc) {
+        const flags: Record<string, string | boolean> = {};
+        const raw = [...args];
+        for (let i = 0; i < raw.length; i++) {
+          const arg = raw[i]!;
+          if (arg.startsWith('--')) {
+            const key = arg.slice(2);
+            const next = raw[i + 1];
+            if (next && !next.startsWith('--')) {
+              flags[key] = next;
+              i++;
+            } else {
+              flags[key] = true;
+            }
+          }
+        }
+        const output = await tlc.handler({ raw: args, flags }, config);
+        return emitOutput(output);
+      }
+
       process.stderr.write(`ands: unknown command "${command}"\n\n${buildGlobalHelp(registry)}\n`);
       return ExitCode.ContractRuleFailure;
     }
@@ -199,11 +248,18 @@ async function dispatch(
 // Global help (dynamic — includes plugin commands)
 // ---------------------------------------------------------------------------
 
-function buildGlobalHelp(registry: ReturnType<typeof buildRegistry>): string {
+function buildGlobalHelp(registry: RuntimeRegistry): string {
   const pluginCmds = Object.values(registry.commands);
+  const tlcCmds = Object.values(registry.topLevelCommands);
+
   const pluginSection = pluginCmds.length > 0
     ? '\nPlugin commands (via ands.config.ts):\n' +
       pluginCmds.map(c => `  ands run ${c.name.padEnd(18)} ${c.description}`).join('\n')
+    : '';
+
+  const tlcSection = tlcCmds.length > 0
+    ? '\nExtension commands (via plugins):\n' +
+      tlcCmds.map(c => `  ands ${c.name.padEnd(22)} ${c.description}`).join('\n')
     : '';
 
   return `
@@ -213,12 +269,14 @@ Usage:
   ands <command> [options]
 
 Commands:
+  init                    Generate a minimal ands.config.ts in the current directory
   validate <file>         Validate an intent file against its Interaction Kit schema
   audit-tokens [options]  Find hardcoded CSS values that should use token variables
   scaffold [options]      Generate boilerplate for a new feature
   schema [command]        Introspect command contracts at runtime (agents: use this)
+  schema --config         Print the fully resolved configuration
   run <name> [...args]    Run a plugin command registered in ands.config.ts
-${pluginSection}
+${pluginSection}${tlcSection}
 
 Options:
   --help, -h              Show help for a command

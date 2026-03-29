@@ -1,7 +1,7 @@
 {
   "name": "@ands/foundation-primitives",
   "version": "0.1.0",
-  "description": "Portable primitive contracts (Button, Input) with mandatory a11y at type level",
+  "description": "Reference library: portable primitive contracts (Button, Input) with mandatory a11y at type level",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

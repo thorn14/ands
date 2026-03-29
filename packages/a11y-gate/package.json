@@ -1,0 +1,27 @@
+{
+  "name": "@ands/a11y-gate",
+  "version": "0.1.0",
+  "description": "Reference plugin: a11y testing gate for ANDS governance (jsx-a11y, axe-core, lighthouse)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@ands/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.4.5"
+  }
+}

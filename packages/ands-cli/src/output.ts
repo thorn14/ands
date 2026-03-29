@@ -1,64 +1,21 @@
 /**
  * @module output
- * @description CLI output types and factories matching `output-schema.json`.
+ * @description CLI output factories and emitters.
  *
- * All commands return a `CliOutput` object that is JSON-serialized to stdout.
- * No prose is ever written to stdout — only the JSON object.
+ * Types (`CliOutput`, `AndsIssue`, `IssueLoc`, `IssueCategory`) are now
+ * defined in `@ands/contracts/src/cli-output.ts`. This module re-exports
+ * them and provides the factory helpers (`makeOutput`, `emitOutput`).
  */
 
-import type { ExitCode } from './exit-codes.js';
+// Re-export types from contracts
+export type {
+  CliOutput,
+  AndsIssue as Issue,
+  IssueLoc,
+  IssueCategory,
+} from '@ands/contracts';
 
-// ---------------------------------------------------------------------------
-// Issue (matches output-schema.json #/$defs/Issue)
-// ---------------------------------------------------------------------------
-
-export type IssueCategory =
-  | 'load'
-  | 'export'
-  | 'schema'
-  | 'contract'
-  | 'token'
-  | 'scaffold'
-  | 'plugin'
-  | 'compliance'
-  | 'internal';
-
-export interface IssueLoc {
-  file: string;
-  line?: number;
-  col?: number;
-}
-
-export interface Issue {
-  category: IssueCategory;
-  code: string;
-  message: string;
-  path?: string[];
-  loc?: IssueLoc;
-  hint?: string;
-  /**
-   * Concrete next CLI command for the agent to run as a recovery step.
-   * Agents: execute this directly. Unlike `hint`, this is always a runnable command.
-   * @example "ands schema validate"
-   * @example "ands scaffold --pattern editable-form --output ./src/my-form --name my-form"
-   */
-  suggestion?: string;
-}
-
-// ---------------------------------------------------------------------------
-// CliOutput (matches output-schema.json)
-// ---------------------------------------------------------------------------
-
-export interface CliOutput {
-  outputVersion: '1.0.0';
-  command: 'validate' | 'audit-tokens' | 'scaffold' | 'schema' | 'run';
-  file?: string;
-  ok: boolean;
-  exitCode: ExitCode;
-  summary: string;
-  issues: Issue[];
-  data?: Record<string, unknown>;
-}
+import type { CliOutput, AndsIssue } from '@ands/contracts';
 
 // ---------------------------------------------------------------------------
 // Factory helpers
@@ -67,11 +24,11 @@ export interface CliOutput {
 export const OUTPUT_VERSION = '1.0.0' as const;
 
 export function makeOutput(
-  command: CliOutput['command'],
+  command: string,
   ok: boolean,
-  exitCode: ExitCode,
+  exitCode: number,
   summary: string,
-  issues: Issue[],
+  issues: AndsIssue[],
   extra?: { file?: string; data?: Record<string, unknown> },
 ): CliOutput {
   return {
@@ -114,6 +71,6 @@ export function emitOutput(output: CliOutput): number {
  * Emit a single Issue as an NDJSON line to stdout (for streaming audit-tokens).
  * Each call writes one JSON object followed by a newline.
  */
-export function emitIssueNdjson(issue: Issue): void {
+export function emitIssueNdjson(issue: AndsIssue): void {
   process.stdout.write(JSON.stringify(issue) + '\n');
 }

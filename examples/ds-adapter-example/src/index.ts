@@ -21,9 +21,31 @@
  * Never import Feature Lab from an adapter.
  */
 
+import type { AndsAdapter } from '@ands/contracts';
+import { buildAdapterTokenIndex } from './token-map.js';
+import { acmeDsAuditConfig } from './audit-config.js';
+
 export { buildAdapterTokenIndex, tokenVar, acmeCssVar } from './token-map.js';
 export { Button } from './components/button.js';
 export { Input } from './components/input.js';
 export { acmeDsAuditConfig } from './audit-config.js';
 export { renderEditableForm } from './scaffold-templates/editable-form.js';
 export type { RenderedForm, RenderedField } from './scaffold-templates/editable-form.js';
+
+/**
+ * AcmeDS adapter satisfying the AndsAdapter contract.
+ * Use this in ands.config.ts: adapters: [acmeAdapter]
+ */
+export const acmeAdapter: AndsAdapter = {
+  tokenMap: buildAdapterTokenIndex(),
+  auditConfig: acmeDsAuditConfig,
+  storybookUrl: 'https://acme.design/storybook',
+  propConventions: {
+    variant: ['variant'],
+    size: ['size', 'buttonSize'],
+    disabled: ['disabled', 'isDisabled'],
+  },
+  deprecations: {
+    'Button.isDisabled': { replacement: 'Button.disabled', since: '2.0.0', message: 'Use disabled instead of isDisabled' },
+  },
+};

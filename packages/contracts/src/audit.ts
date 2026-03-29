@@ -57,4 +57,18 @@ export interface AuditConfig {
    * @default 'packages/foundation-tokens/dist/tokens.index.json'
    */
   tokenIndexPath?: string;
+  /**
+   * Regex patterns for detecting raw (non-token) values in source files.
+   * Provided by DS adapters to customize what constitutes a violation.
+   */
+  rawValuePatterns?: RegExp[];
+  /**
+   * CSS custom property prefix used by the host DS (e.g. '--acme-').
+   * Values matching this prefix are treated as proper token access.
+   */
+  tokenPrefix?: string;
+  /**
+   * Glob patterns of files to exclude from scanning.
+   */
+  ignoreFiles?: string[];
 }

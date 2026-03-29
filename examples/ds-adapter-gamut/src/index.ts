@@ -23,6 +23,9 @@
  * - @gamut-all/core is a peer dependency (optional)
  */
 
+import type { AndsAdapter } from '@ands/contracts';
+import { gamutAuditConfig } from './audit-config.js';
+
 // Plugin export (register in ands.config.ts)
 export { gamutPlugin } from './plugin.js';
 export { complianceCommand } from './commands/compliance.js';
@@ -43,3 +46,19 @@ export { Input } from './components/input.js';
 
 // Audit config
 export { gamutAuditConfig } from './audit-config.js';
+
+/**
+ * Gamut adapter satisfying the AndsAdapter contract.
+ * Use this in ands.config.ts: adapters: [gamutAdapter]
+ */
+export const gamutAdapter: AndsAdapter = {
+  tokenMap: {},  // populated at runtime via buildGamutTokenIndex()
+  auditConfig: gamutAuditConfig,
+  storybookUrl: 'https://gamut.design/storybook',
+  propConventions: {
+    variant: ['variant'],
+    size: ['size'],
+    disabled: ['disabled'],
+  },
+  deprecations: {},
+};

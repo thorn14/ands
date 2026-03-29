@@ -4,17 +4,6 @@
  *
  * **Start here** when building any ANDS-compatible package or feature.
  *
- * | Export         | Purpose                                              |
- * |----------------|------------------------------------------------------|
- * | `Brand<T,K>`   | Opaque branded types for compile-time ID safety      |
- * | `brand()`      | Runtime brand constructor (identity fn)              |
- * | `UserId` etc.  | Pre-defined branded ID examples                      |
- * | `Result<T,E>`  | Discriminated union for tool outputs                 |
- * | `ok()` / `err()` | Result constructors                                |
- * | `assertNever()`| Exhaustive switch guard (place in default branches)  |
- * | `strictObject()`| Zod helper: creates strict schema (no unknown keys) |
- * | `z`            | Re-exported `zod` namespace                          |
- *
  * **Boundary rule:** This package has no internal ANDS dependencies.
  * It may be used by any tier (Foundation → Interaction Kit → Feature Lab).
  */
@@ -25,3 +14,18 @@ export * from './assert-never.js';
 export * from './zod-helpers.js';
 export * from './plugin.js';
 export * from './audit.js';
+export * from './adapter.js';
+export * from './cli-output.js';
+export * from './top-level-command.js';
+export * from './silence.js';
+export * from './config.js';
+export * from './defaults.js';
+export * from './merge-config.js';
+export * from './lint.js';
+export * from './a11y.js';
+export * from './guidelines.js';
+export * from './doc-gen.js';
+export * from './health.js';
+export * from './mcp.js';
+export * from './narrative.js';
+export * from './triage.js';
