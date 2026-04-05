@@ -7,6 +7,8 @@ import type { AndsPlugin, TopLevelCommand, CliOutput, AndsConfig, AndsAdapter, A
 import { noRawTokenValue } from './rules/no-raw-token-value.js';
 import { noDeprecatedProp } from './rules/no-deprecated-prop.js';
 import { propNamingConsistency } from './rules/prop-naming-consistency.js';
+import { noHardcodedString } from './rules/no-hardcoded-string.js';
+import { piiExposure } from './rules/pii-exposure.js';
 import { readFileSync, readdirSync, statSync } from 'fs';
 import { join, relative } from 'path';
 
@@ -14,6 +16,8 @@ const builtInRules: AndsLintRule[] = [
   noRawTokenValue,
   noDeprecatedProp,
   propNamingConsistency,
+  noHardcodedString,
+  piiExposure,
 ];
 
 function collectFiles(dir: string, extensions: string[]): string[] {

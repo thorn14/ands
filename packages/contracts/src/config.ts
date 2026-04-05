@@ -86,6 +86,31 @@ export interface CouncilConfig {
   councilLog?: string;
 }
 
+/** VPAT / compliance report configuration. */
+export interface VpatConfig {
+  productName?: string;
+  vendorName?: string;
+  productVersion?: string;
+  outputPath?: string;
+  wcagLevel?: 'A' | 'AA' | 'AAA';
+  evaluationMethods?: string[];
+}
+
+/** i18n checking configuration. */
+export interface I18nConfig {
+  translationFunctions?: string[];
+  checkAttributes?: string[];
+  ignore?: string[];
+  mode?: 'error' | 'warn' | 'off';
+}
+
+/** PII detection configuration. */
+export interface PiiConfig {
+  categories?: ('email' | 'ssn' | 'phone' | 'credit-card' | 'ip-address' | 'address' | 'dob')[];
+  ignore?: string[];
+  mode?: 'error' | 'warn' | 'off';
+}
+
 /**
  * Shape of the project-level `ands.config.ts` default export.
  *
@@ -113,6 +138,12 @@ export interface AndsConfig {
   mcp?: McpConfig;
   /** Council (human judgment) configuration. */
   council?: CouncilConfig;
+  /** VPAT / compliance report configuration. */
+  vpat?: VpatConfig;
+  /** i18n checking configuration. */
+  i18n?: I18nConfig;
+  /** PII detection configuration. */
+  pii?: PiiConfig;
   /** Plugins to load at CLI startup. */
   plugins?: (AndsPlugin | ExcludeDirective)[];
   /** Preset configs to merge (depth-first, defaults < presets < consumer). */

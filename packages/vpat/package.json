@@ -1,7 +1,7 @@
 {
-  "name": "@ands/lint-rules",
+  "name": "@ands/vpat",
   "version": "0.1.0",
-  "description": "Reference plugin: lint rules for ANDS governance (no-raw-token-value, no-deprecated-prop, prop-naming-consistency, no-hardcoded-string, pii-exposure)",
+  "description": "VPAT 2.5 WCAG Edition report generator from ANDS a11y results",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -18,8 +18,7 @@
     "clean": "rm -rf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
-    "@ands/contracts": "workspace:*",
-    "oxc-parser": "^0.60.0"
+    "@ands/contracts": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",

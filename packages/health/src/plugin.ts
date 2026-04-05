@@ -236,7 +236,70 @@ const docFreshness: HealthMetric = {
 // Built-in metrics array
 // ---------------------------------------------------------------------------
 
-const builtInMetrics: HealthMetric[] = [tokenCoverage, a11yRate, docFreshness];
+/**
+ * PII exposure rate: percentage of source files that contain potential PII patterns.
+ * Lower is better — 0% means no PII detected.
+ */
+const piiExposureRate: HealthMetric = {
+  id: 'pii-exposure-rate',
+  name: 'PII Exposure Rate',
+  description: 'Percentage of source files containing potential PII patterns',
+  compute: async (ctx: HealthContext): Promise<MetricResult> => {
+    const srcDir = join(ctx.rootDir, 'src');
+    const files = collectFiles(srcDir, ['.ts', '.tsx', '.js', '.jsx']);
+    if (files.length === 0) {
+      return {
+        id: 'pii-exposure-rate',
+        value: 0,
+        unit: '%',
+        status: 'pass',
+        details: 'No source files found',
+      };
+    }
+
+    const PII_PATTERNS = [
+      /\b\d{3}-\d{2}-\d{4}\b/,                                    // SSN
+      /\b(?:4\d{12}(?:\d{3})?|5[1-5]\d{14}|3[47]\d{13})\b/,     // Credit card
+      /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/,          // Email
+    ];
+
+    let piiCount = 0;
+    for (const filePath of files) {
+      try {
+        const content = readFileSync(filePath, 'utf8');
+        if (PII_PATTERNS.some(p => p.test(content))) {
+          piiCount++;
+        }
+      } catch {
+        // Skip unreadable files
+      }
+    }
+
+    const value = Math.round((piiCount / files.length) * 100);
+    // For PII, lower is better — threshold is a max percentage
+    const threshold = 5;
+    let status: 'pass' | 'warn' | 'fail';
+    if (value <= threshold) {
+      status = 'pass';
+    } else if (value <= threshold * 3) {
+      status = 'warn';
+    } else {
+      status = 'fail';
+    }
+
+    const result: MetricResult = {
+      id: 'pii-exposure-rate',
+      value,
+      unit: '%',
+      threshold,
+      status,
+      details: `${piiCount}/${files.length} files contain potential PII patterns`,
+    };
+    return result;
+  },
+};
+
+const builtInMetrics: HealthMetric[] = [tokenCoverage, a11yRate, docFreshness, piiExposureRate];
 
 // ---------------------------------------------------------------------------
 // Report builder

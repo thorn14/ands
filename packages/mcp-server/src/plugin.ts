@@ -4,6 +4,7 @@
  *
  * Registers the `serve` top-level command that starts an MCP server
  * exposing ANDS-native resources: ands://policy, ands://guidelines/INDEX, etc.
+ * Also exposes tools for a11y, vpat, lint/i18n, and review operations.
  */
 
 import type {
@@ -51,6 +52,59 @@ const andsResources: McpResource[] = [
     name: 'Health Report',
     description: 'Latest design-system health metrics',
   },
+  {
+    uri: 'ands://vpat/report',
+    name: 'VPAT Report',
+    description: 'Current VPAT 2.5 WCAG conformance report',
+  },
+];
+
+// ---------------------------------------------------------------------------
+// ANDS MCP tools
+// ---------------------------------------------------------------------------
+
+interface McpTool {
+  uri: string;
+  name: string;
+  description: string;
+}
+
+const andsTools: McpTool[] = [
+  {
+    uri: 'ands://a11y/run-static',
+    name: 'A11y Static Analysis',
+    description: 'Run OXC-based static a11y analysis on JSX/TSX files',
+  },
+  {
+    uri: 'ands://a11y/run-rendered',
+    name: 'A11y Rendered Testing',
+    description: 'Run axe-core analysis against rendered Storybook stories',
+  },
+  {
+    uri: 'ands://a11y/run-page',
+    name: 'A11y Page Audit',
+    description: 'Run Lighthouse accessibility audit against a URL',
+  },
+  {
+    uri: 'ands://lint/i18n',
+    name: 'i18n Lint',
+    description: 'Check for hardcoded user-facing strings that should use translation functions',
+  },
+  {
+    uri: 'ands://lint/pii',
+    name: 'PII Detection',
+    description: 'Scan source code for potential PII exposure patterns',
+  },
+  {
+    uri: 'ands://review/suggest',
+    name: 'Review Suggestions',
+    description: 'Run a11y/lint review and generate LLM-powered fix suggestions',
+  },
+  {
+    uri: 'ands://review/explain',
+    name: 'Explain Issue',
+    description: 'Explain a specific a11y issue with fix context',
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -76,7 +130,7 @@ const passThroughEnrichment: McpEnrichment = {
 
 const serveCommand: TopLevelCommand = {
   name: 'serve',
-  description: 'Start the ANDS MCP server exposing design-system resources',
+  description: 'Start the ANDS MCP server exposing design-system resources and tools',
   handler: async (args, _config) => {
     const portFlag = typeof args.flags['port'] === 'string' ? args.flags['port'] : undefined;
     const port = portFlag ? parseInt(portFlag, 10) : 3333;
@@ -101,6 +155,7 @@ const serveCommand: TopLevelCommand = {
 
     // Log startup message (placeholder — does not actually bind a port)
     const resourceList = andsResources.map((r) => r.uri);
+    const toolList = andsTools.map((t) => t.uri);
 
     // Build a sample response showing registered resources
     const responses: McpResponse[] = andsResources.map((r) => ({
@@ -118,6 +173,7 @@ const serveCommand: TopLevelCommand = {
       data: {
         port,
         resources: resourceList,
+        tools: toolList,
         responses,
         enrichments: [passThroughEnrichment.name],
       },

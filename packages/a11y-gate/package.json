@@ -1,7 +1,7 @@
 {
   "name": "@ands/a11y-gate",
   "version": "0.1.0",
-  "description": "Reference plugin: a11y testing gate for ANDS governance (jsx-a11y, axe-core, lighthouse)",
+  "description": "Reference plugin: a11y testing gate for ANDS governance (OXC, axe-core, lighthouse)",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -18,7 +18,19 @@
     "clean": "rm -rf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
-    "@ands/contracts": "workspace:*"
+    "@ands/contracts": "workspace:*",
+    "oxc-parser": "^0.60.0",
+    "aria-query": "^5.3.2"
+  },
+  "peerDependencies": {
+    "@axe-core/playwright": "^4.0.0",
+    "playwright": "^1.40.0",
+    "lighthouse": "^12.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@axe-core/playwright": { "optional": true },
+    "playwright": { "optional": true },
+    "lighthouse": { "optional": true }
   },
   "devDependencies": {
     "@types/node": "^25.5.0",

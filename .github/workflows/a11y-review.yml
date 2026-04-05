@@ -1,0 +1,33 @@
+name: A11y Review
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  a11y-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Run a11y static analysis
+        run: pnpm tsx packages/ands-cli/src/bin.ts a11y --tier static
+      - name: Run lint (includes i18n + PII rules)
+        run: pnpm tsx packages/ands-cli/src/bin.ts lint
+      - name: Generate VPAT report
+        run: pnpm tsx packages/ands-cli/src/bin.ts vpat --format json
+      - name: Run LLM review (if configured)
+        run: pnpm tsx packages/ands-cli/src/bin.ts review --post-comments
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
