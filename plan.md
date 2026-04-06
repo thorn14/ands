@@ -1,47 +1,26 @@
-# ANDS Enhancement Plan — Implementation Status
+# PR Review Fix Plan
 
-## Completed
+## Context
+- `research.md` is not present in this branch, so there is no repo research file to read before implementation.
 
-### Phase A: Real A11y Libraries in a11y-gate
-- [x] A1: OXC-powered static runner (`packages/a11y-gate/src/runners/static.ts`)
-- [x] A2: Rendered runner with axe-core + Playwright (`packages/a11y-gate/src/runners/rendered.ts`)
-- [x] A3: Page runner with Lighthouse (`packages/a11y-gate/src/runners/page.ts`)
-- [x] A4: Shared peer-dep resolver (`packages/a11y-gate/src/resolve-peer.ts`)
-- [x] A5: MCP fallback tools added to mcp-server
-- [x] A6: Tests (static, rendered, page)
+## Files
+- `packages/ands-cli/src/commands/schema.ts`: include plugin top-level commands in schema output and correctly describe `ands run <name>` invocation.
+- `packages/ands-cli/src/__tests__/schema.test.ts`: cover top-level command discovery and `run` command introspection shape.
+- `packages/mcp-server/src/plugin.ts`: make `ands serve` fail clearly until server startup is implemented.
+- `packages/vpat/src/plugin.ts`: make `ands vpat` fail clearly when no a11y result input is available instead of generating a misleading clean report.
 
-### Phase B: VPAT Generator + Compliance Credentials
-- [x] B1: New `@ands/vpat` package
-- [x] B2: WCAG 2.2 criteria data (`src/wcag-criteria.ts`)
-- [x] B3: VPAT template generator (`src/generate-vpat.ts`) — markdown, JSON, HTML
-- [x] B4: ACR generator (`src/generate-acr.ts`)
-- [x] B5: VpatConfig in contracts
-- [x] B6: MCP resource `ands://vpat/report`
-- [x] Tests: 13 passing
+## Exports And Types
+- No new public exports.
+- Reuse existing `CliOutput`, `AndsIssue`, `RuntimeRegistry`, `PluginCommand`, and `TopLevelCommand` types.
 
-### Phase C: i18n Checking
-- [x] C1: OXC-based `no-hardcoded-string` rule (`packages/lint-rules/src/rules/no-hardcoded-string.ts`)
-- [x] C2: I18nConfig in contracts
-- [x] C3: MCP tool `ands://lint/i18n`
-- [x] C4: Tests
-
-### Phase D: PII Detection
-- [x] D1: PII lint rule (`packages/lint-rules/src/rules/pii-exposure.ts`)
-- [x] D2: PII triage rules in narrative-api (6 new rules)
-- [x] D3: PII health metric (`pii-exposure-rate`)
-- [x] D4: PiiConfig in contracts
-- [x] D5: Tests (PII exposure + PII triage)
-
-### Phase E: LLM A11y Bugbot
-- [x] E1: New `@ands/a11y-bugbot` package
-- [x] E2: Reviewer orchestrator (`src/reviewer.ts`)
-- [x] E3: Prompt builder (`src/prompt-builder.ts`)
-- [x] E4: GitHub PR integration (`src/github-commenter.ts`)
-- [x] E5: MCP tools `ands://review/suggest`, `ands://review/explain`
-- [x] E6: CI workflow (`.github/workflows/a11y-review.yml`)
-- [x] E7: Tests (prompt-builder, response-parser)
+## Implementation
+- Update schema listing to emit built-in commands, top-level plugin commands, and `run` as a distinct built-in command.
+- Update per-command schema introspection so `ands schema run` reports plugin command names and preserves the real `ands run <name> [...args]` invocation contract.
+- Change `mcp-server`'s `serve` command to return a non-zero permanent failure with a clear placeholder/not-implemented issue.
+- Change `vpat` to require explicit issue input from supported command arguments before generating a report.
+- Add tests for schema output regressions.
 
 ## Verification
-- Build: ✅ All 21 packages build
-- Typecheck: ✅ Clean
-- Tests: ✅ 78 passing across 12 test files (contracts, a11y-gate, lint-rules, vpat, a11y-bugbot, narrative-api)
+- `pnpm exec vitest run packages/ands-cli/src/__tests__/schema.test.ts`
+- `pnpm exec vitest run packages/contracts/src/__tests__/merge-config.test.ts packages/contracts/src/__tests__/adapter.test.ts`
+- `pnpm -r typecheck`

@@ -16,6 +16,16 @@ import type {
 } from '@ands/contracts';
 import { generateVpat, vpatToMarkdown, vpatToJson, vpatToHtml } from './generate-vpat.js';
 import { generateAcr } from './generate-acr.js';
+import type { AndsIssue } from '@ands/contracts';
+
+function parseIssuesArg(rawIssueJson: string): AndsIssue[] | null {
+  try {
+    const parsed: unknown = JSON.parse(rawIssueJson);
+    return Array.isArray(parsed) ? parsed as AndsIssue[] : null;
+  } catch {
+    return null;
+  }
+}
 
 const vpatCommand: TopLevelCommand = {
   name: 'vpat',
@@ -60,9 +70,41 @@ const vpatCommand: TopLevelCommand = {
       } satisfies CliOutput;
     }
 
-    // In a real implementation, we would collect issues from a11y-gate runners.
-    // For now, generate from an empty issue set (no issues = full conformance).
-    const issues = (args as any).issues ?? [];
+    const issuesFlag = args.flags['issues'];
+    if (typeof issuesFlag !== 'string') {
+      return {
+        outputVersion: '1.0.0',
+        command: 'vpat',
+        ok: false,
+        exitCode: 4,
+        summary: 'VPAT generation requires explicit accessibility issues input',
+        issues: [{
+          category: 'schema',
+          code: 'MISSING_ISSUES_INPUT',
+          message: 'Pass serialized a11y issues with --issues before generating a VPAT report',
+          severity: 'error',
+          hint: 'This command must not assume zero findings when no audit results were supplied.',
+        }],
+      } satisfies CliOutput;
+    }
+
+    const issues = parseIssuesArg(issuesFlag);
+    if (issues === null) {
+      return {
+        outputVersion: '1.0.0',
+        command: 'vpat',
+        ok: false,
+        exitCode: 4,
+        summary: 'Invalid value for --issues',
+        issues: [{
+          category: 'schema',
+          code: 'INVALID_ISSUES_INPUT',
+          message: '--issues must be a JSON array of ANDS issues',
+          severity: 'error',
+          suggestion: "ands vpat --format json --issues '[]'",
+        }],
+      } satisfies CliOutput;
+    }
 
     const report = generateVpat(issues, config.vpat);
     const acr = generateAcr(report);

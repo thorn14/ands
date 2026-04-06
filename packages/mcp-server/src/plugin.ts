@@ -13,7 +13,6 @@ import type {
   CliOutput,
   McpEnrichment,
   McpEnrichmentContext,
-  McpResponse,
 } from '@ands/contracts';
 
 // ---------------------------------------------------------------------------
@@ -153,28 +152,25 @@ const serveCommand: TopLevelCommand = {
       } satisfies CliOutput;
     }
 
-    // Log startup message (placeholder — does not actually bind a port)
-    const resourceList = andsResources.map((r) => r.uri);
-    const toolList = andsTools.map((t) => t.uri);
-
-    // Build a sample response showing registered resources
-    const responses: McpResponse[] = andsResources.map((r) => ({
-      resource: r.uri,
-      content: { name: r.name, description: r.description },
-    }));
-
     return {
       outputVersion: '1.0.0',
       command: 'serve',
-      ok: true,
-      exitCode: 0,
-      summary: `MCP server configured for port ${port} (placeholder — server binding not yet implemented)`,
-      issues: [],
+      ok: false,
+      exitCode: 4,
+      summary: 'MCP server startup is not implemented yet',
+      issues: [
+        {
+          category: 'internal',
+          code: 'MCP_SERVER_NOT_IMPLEMENTED',
+          message: `Cannot start MCP server on port ${port} because server binding is not implemented`,
+          severity: 'error',
+          hint: 'Implement the server runtime before advertising `ands serve` as a working command.',
+        },
+      ],
       data: {
         port,
-        resources: resourceList,
-        tools: toolList,
-        responses,
+        resources: andsResources.map((r) => r.uri),
+        tools: andsTools.map((t) => t.uri),
         enrichments: [passThroughEnrichment.name],
       },
     } satisfies CliOutput;
