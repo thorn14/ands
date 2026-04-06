@@ -168,7 +168,7 @@ const serveCommand: TopLevelCommand = {
       command: 'serve',
       ok: true,
       exitCode: 0,
-      summary: `MCP server starting on port ${port}`,
+      summary: `MCP server configured for port ${port} (placeholder — server binding not yet implemented)`,
       issues: [],
       data: {
         port,

@@ -118,6 +118,8 @@ export const noHardcodedString: AndsLintRule = {
 
     const severity = i18nConfig?.mode === 'error' ? 'error' : 'warn';
     const checkAttrs = new Set(i18nConfig?.checkAttributes ?? DEFAULT_CHECK_ATTRS);
+    const translationFns = new Set(i18nConfig?.translationFunctions ?? DEFAULT_TRANSLATION_FNS);
+    const primaryFn = (i18nConfig?.translationFunctions ?? DEFAULT_TRANSLATION_FNS)[0] ?? 't';
 
     let parseModule: typeof import('oxc-parser');
     try {
@@ -143,9 +145,43 @@ export const noHardcodedString: AndsLintRule = {
 
     const issues: AndsIssue[] = [];
 
+    // Track nodes inside translation call expressions to skip them
+    const translationCallSpans = new Set<string>();
+    walkAst(ast, (node: OxcNode) => {
+      // Detect translation function calls: t('...'), i18n.t('...'), formatMessage({...})
+      if (node.type === 'CallExpression') {
+        const callee = node.callee;
+        let fnName: string | null = null;
+        if (callee && typeof callee === 'object') {
+          if (callee.type === 'Identifier' && typeof callee.name === 'string') {
+            fnName = callee.name;
+          } else if (callee.type === 'MemberExpression' && callee.object && callee.property) {
+            const obj = typeof callee.object === 'object' && 'name' in callee.object ? callee.object.name : '';
+            const prop = typeof callee.property === 'object' && 'name' in callee.property ? callee.property.name : '';
+            if (typeof obj === 'string' && typeof prop === 'string') {
+              fnName = `${obj}.${prop}`;
+            }
+          }
+        }
+        if (fnName && translationFns.has(fnName) && node.span) {
+          translationCallSpans.add(`${node.span.start}-${node.span.end}`);
+        }
+      }
+    });
+
+    function isInsideTranslationCall(span?: { start: number; end: number }): boolean {
+      if (!span) return false;
+      for (const key of translationCallSpans) {
+        const [s, e] = key.split('-').map(Number);
+        if (s !== undefined && e !== undefined && span.start >= s && span.end <= e) return true;
+      }
+      return false;
+    }
+
     walkAst(ast, (node: OxcNode) => {
       // Check JSXText nodes
       if (node.type === 'JSXText') {
+        if (isInsideTranslationCall(node.span)) return;
         const text = typeof node.value === 'string' ? node.value : '';
         const trimmed = text.trim();
         if (trimmed.length >= 3 && /^[A-Z]/.test(trimmed) && !isNonTranslatable(trimmed)) {
@@ -156,7 +192,7 @@ export const noHardcodedString: AndsLintRule = {
             message: `Hardcoded string "${trimmed.slice(0, 40)}${trimmed.length > 40 ? '...' : ''}" should use a translation function`,
             ...(line !== undefined ? { loc: { file: ctx.filePath, line } } : { loc: { file: ctx.filePath } }),
             severity,
-            hint: 'Wrap with t() or your configured translation function',
+            hint: `Wrap with ${primaryFn}() or your configured translation function`,
           });
         }
       }
@@ -168,6 +204,7 @@ export const noHardcodedString: AndsLintRule = {
         if (SKIP_ATTRS.has(attrName)) return;
         if (!checkAttrs.has(attrName)) return;
 
+        if (isInsideTranslationCall(node.span)) return;
         const strValue = getAttrStringValue(node);
         if (strValue && !isNonTranslatable(strValue)) {
           const line = node.span ? getLineFromOffset(ctx.content, node.span.start) : undefined;
@@ -177,7 +214,7 @@ export const noHardcodedString: AndsLintRule = {
             message: `Hardcoded string in ${attrName}="${strValue.slice(0, 40)}${strValue.length > 40 ? '...' : ''}" should use a translation function`,
             ...(line !== undefined ? { loc: { file: ctx.filePath, line } } : { loc: { file: ctx.filePath } }),
             severity,
-            hint: `Use ${attrName}={t('key')} instead`,
+            hint: `Use ${attrName}={${primaryFn}('key')} instead`,
           });
         }
       }

@@ -107,7 +107,7 @@ async function runLint(config: AndsConfig, allRules: AndsLintRule[]): Promise<Cl
 
 const lintCommand: TopLevelCommand = {
   name: 'lint',
-  description: 'Run ESLint + stylelint with ANDS governance rules',
+  description: 'Run ANDS governance lint rules (tokens, props, i18n, PII)',
   handler: async (_args, rawConfig) => {
     const config = rawConfig as AndsConfig;
     // Collect all lint rules: built-in + from all plugins

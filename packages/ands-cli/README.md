@@ -78,8 +78,8 @@ export default defineConfig({
 ```
 
 Config supports:
-- **Presets** — named preset strings that expand to a known plugin set.
-- **YAML compat** — configs can also be expressed in `ands.config.yaml` for environments without a TypeScript runtime.
+- **Presets** — named preset strings or inline partial configs that expand to a known plugin set.
+- **JSON compat** — configs can also be expressed in `.andsrc.json` for environments without a TypeScript runtime.
 
 ## Examples
 

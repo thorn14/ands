@@ -15,6 +15,8 @@ JavaScript, and CSS source files.
 | `no-raw-token-value` | Disallows hardcoded hex colours and px/rem/em values — use CSS token variables instead |
 | `no-deprecated-prop` | Disallows props that adapters have marked as deprecated |
 | `prop-naming-consistency` | Ensures prop names match the naming conventions declared by the active adapter |
+| `no-hardcoded-string` | Detects untranslated user-facing strings in JSX/TSX (i18n) via OXC AST analysis |
+| `pii-exposure` | Detects PII patterns (emails, SSNs, credit cards, etc.) in source code string literals |
 
 Rules are composable: additional plugins can contribute their own `lintRules` and they are merged
 into the same `ands lint` run.

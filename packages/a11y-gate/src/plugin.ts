@@ -24,9 +24,46 @@ const a11yCommand: TopLevelCommand = {
       }
     }
 
-    // Determine which tiers to run
-    const tier = args.flags['tier'] as string | undefined;
-    const url = args.flags['url'] as string | undefined;
+    // Validate --tier flag
+    const tierFlag = args.flags['tier'];
+    const url = typeof args.flags['url'] === 'string' ? args.flags['url'] : undefined;
+
+    if (tierFlag !== undefined && typeof tierFlag !== 'string') {
+      return {
+        outputVersion: '1.0.0',
+        command: 'a11y',
+        ok: false,
+        exitCode: 4,
+        summary: '--tier requires a value: static, rendered, or page',
+        issues: [{
+          category: 'schema',
+          code: 'INVALID_TIER_FLAG',
+          message: '--tier requires a value (static, rendered, or page)',
+          severity: 'error',
+          suggestion: 'ands a11y --tier static',
+        }],
+      } satisfies CliOutput;
+    }
+
+    const tier = tierFlag as string | undefined;
+    const validTiers = new Set(['static', 'rendered', 'page']);
+    if (tier && !validTiers.has(tier)) {
+      return {
+        outputVersion: '1.0.0',
+        command: 'a11y',
+        ok: false,
+        exitCode: 4,
+        summary: `Unknown tier "${tier}"`,
+        issues: [{
+          category: 'schema',
+          code: 'UNKNOWN_TIER',
+          message: `Unknown tier "${tier}". Valid tiers: static, rendered, page`,
+          severity: 'error',
+          suggestion: 'ands a11y --tier static',
+        }],
+      } satisfies CliOutput;
+    }
+
     const runnersToExecute = tier
       ? allRunners.filter(r => r.tier === tier)
       : allRunners;

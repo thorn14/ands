@@ -12,9 +12,9 @@ All testing tools are peer dependencies — install only the tiers you need.
 
 | Runner | Tier | Tooling | When to use |
 |--------|------|---------|-------------|
-| `jsx-a11y-static` | `static` | Built-in JSX checks | Every CI run — no browser required |
+| `oxc-static` | `static` | OXC parser + aria-query | Every CI run — no browser required |
 | `axe-core-rendered` | `rendered` | axe-core + Playwright | Storybook story audits |
-| `lighthouse-page` | `page` | Lighthouse + pa11y | Staging URL audits |
+| `lighthouse-page` | `page` | Lighthouse | Staging URL audits |
 
 Running without `--tier` executes all three tiers in sequence.
 

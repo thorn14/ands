@@ -107,6 +107,18 @@ export const piiExposure: AndsLintRule = {
     // Skip test/fixture files
     if (SKIP_FILE_PATTERNS.some(p => p.test(ctx.filePath))) return [];
 
+    // Honor PiiConfig.ignore globs
+    const ignorePatterns = piiConfig?.ignore ?? [];
+    for (const pattern of ignorePatterns) {
+      // Support basic glob patterns: * matches any sequence, ** matches across /
+      const regexStr = pattern
+        .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+        .replace(/\*\*/g, '<<GLOBSTAR>>')
+        .replace(/\*/g, '[^/]*')
+        .replace(/<<GLOBSTAR>>/g, '.*');
+      if (new RegExp(regexStr).test(ctx.filePath)) return [];
+    }
+
     // Determine which categories to check
     const enabledCategories = piiConfig?.categories
       ? new Set(piiConfig.categories)

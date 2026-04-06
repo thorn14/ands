@@ -146,6 +146,6 @@ export interface AndsConfig {
   pii?: PiiConfig;
   /** Plugins to load at CLI startup. */
   plugins?: (AndsPlugin | ExcludeDirective)[];
-  /** Preset configs to merge (depth-first, defaults < presets < consumer). */
-  presets?: Partial<AndsConfig>[];
+  /** Preset configs to merge — string package names or inline partials (depth-first, defaults < presets < consumer). */
+  presets?: (string | Partial<AndsConfig>)[];
 }

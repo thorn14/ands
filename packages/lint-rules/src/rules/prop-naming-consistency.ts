@@ -27,15 +27,6 @@ export const propNamingConsistency: AndsLintRule = {
 
     if (conventions.size === 0) return issues;
 
-    // Build a set of all known valid prop names
-    const validNames = new Set<string>();
-    for (const [canonical, aliases] of conventions) {
-      validNames.add(canonical);
-      for (const alias of aliases) {
-        validNames.add(alias);
-      }
-    }
-
     // Build reverse map: alias → canonical
     const aliasToCanonical = new Map<string, string>();
     for (const [canonical, aliases] of conventions) {

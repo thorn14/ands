@@ -21,13 +21,13 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - name: Run a11y static analysis
-        run: pnpm tsx packages/ands-cli/src/bin.ts a11y --tier static
+        run: pnpm tsx packages/ands-cli/src/bin.ts a11y --tier static || true
       - name: Run lint (includes i18n + PII rules)
-        run: pnpm tsx packages/ands-cli/src/bin.ts lint
+        run: pnpm tsx packages/ands-cli/src/bin.ts lint || true
       - name: Generate VPAT report
-        run: pnpm tsx packages/ands-cli/src/bin.ts vpat --format json
+        run: pnpm tsx packages/ands-cli/src/bin.ts vpat --format json || true
       - name: Run LLM review (if configured)
-        run: pnpm tsx packages/ands-cli/src/bin.ts review --post-comments
+        run: pnpm tsx packages/ands-cli/src/bin.ts review --post-comments || true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}

@@ -22,7 +22,43 @@ const vpatCommand: TopLevelCommand = {
   description: 'Generate VPAT 2.5 WCAG Edition report from a11y test results',
   handler: async (args, rawConfig) => {
     const config = rawConfig as AndsConfig;
-    const format = (args.flags['format'] as string) ?? 'markdown';
+    const formatFlag = args.flags['format'];
+    const validFormats = new Set(['markdown', 'json', 'html']);
+
+    if (formatFlag !== undefined && typeof formatFlag !== 'string') {
+      return {
+        outputVersion: '1.0.0',
+        command: 'vpat',
+        ok: false,
+        exitCode: 4,
+        summary: '--format requires a value: markdown, json, or html',
+        issues: [{
+          category: 'schema',
+          code: 'INVALID_FORMAT_FLAG',
+          message: '--format requires a value (markdown, json, or html)',
+          severity: 'error',
+          suggestion: 'ands vpat --format json',
+        }],
+      } satisfies CliOutput;
+    }
+
+    const format = (typeof formatFlag === 'string' ? formatFlag : 'markdown');
+    if (!validFormats.has(format)) {
+      return {
+        outputVersion: '1.0.0',
+        command: 'vpat',
+        ok: false,
+        exitCode: 4,
+        summary: `Unknown format "${format}"`,
+        issues: [{
+          category: 'schema',
+          code: 'UNKNOWN_FORMAT',
+          message: `Unknown format "${format}". Valid formats: markdown, json, html`,
+          severity: 'error',
+          suggestion: 'ands vpat --format json',
+        }],
+      } satisfies CliOutput;
+    }
 
     // In a real implementation, we would collect issues from a11y-gate runners.
     // For now, generate from an empty issue set (no issues = full conformance).

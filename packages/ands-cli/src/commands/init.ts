@@ -28,7 +28,7 @@ export async function runInit(args: string[]): Promise<number> {
   if (existsSync(configPath) && !force) {
     return emitOutput(
       makeOutput(
-        'scaffold',
+        'init',
         false,
         ExitCode.ContractRuleFailure,
         'ands.config.ts already exists',
@@ -49,7 +49,7 @@ export async function runInit(args: string[]): Promise<number> {
     writeFileSync(configPath, CONFIG_TEMPLATE);
     return emitOutput(
       makeOutput(
-        'scaffold',
+        'init',
         true,
         ExitCode.Success,
         'Generated ands.config.ts',
@@ -65,7 +65,7 @@ export async function runInit(args: string[]): Promise<number> {
   } catch (e) {
     return emitOutput(
       makeOutput(
-        'scaffold',
+        'init',
         false,
         ExitCode.InternalError,
         `Failed to write ands.config.ts: ${String(e instanceof Error ? e.message : e)}`,
