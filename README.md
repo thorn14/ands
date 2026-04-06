@@ -1,90 +1,129 @@
 # ANDS — Agent-Native Design System
 
-ANDS is a **portability harness** that wraps your existing design system to make it consumable by AI agents. It is not a design system itself — it's a contract layer that lets agents build UI features by reading schemas and running a CLI, with no prose documentation required.
+A governance harness that lets AI agents build, validate, and audit design-system usage — without replacing your existing component library.
 
-**Why it matters:** AI agents don't read docs well. ANDS gives them Zod schemas, typed state machines, and a CLI governor they can loop on until the output is correct. Swap the underlying design system by swapping one adapter package.
+ANDS wraps **any** design system (Material UI, Chakra, your internal library) via a thin adapter layer, then provides CLI tools that agents can call with deterministic exit codes and structured JSON output.
 
----
-
-## Setup
-
-**Prerequisites:** Node 20+, pnpm 9+
+## Quick Start
 
 ```bash
-git clone https://github.com/thorn14/ands
-cd ands
+# Install
 pnpm install
-pnpm build
-```
 
----
+# Initialize a project
+pnpm tsx packages/ands-cli/src/bin.ts init
+
+# Validate an intent file
+pnpm tsx packages/ands-cli/src/bin.ts validate ./src/intent.ts
+
+# Audit for raw token values
+pnpm tsx packages/ands-cli/src/bin.ts audit-tokens
+
+# Scaffold a new feature
+pnpm tsx packages/ands-cli/src/bin.ts scaffold --pattern editable-form --output ./src/features/my-form --name my-form
+```
 
 ## Architecture
 
 ```
-Foundation (rigid, no internal deps)
-  @ands/contracts           — core types: Result, Brand, AndsPlugin
-  @ands/foundation-tokens   — DTCG token validation + build
-  @ands/foundation-primitives — accessible component contracts
-
-Interaction Kit (structural)
-  @ands/interaction-kit     — UX patterns: editable-form schema + state machine
-  @ands/ands-cli            — CLI governor: validate, scaffold, audit-tokens
-
-DS Adapters (per design system — live in examples/)
-  ds-adapter-example        — template for connecting any design system
-  ds-adapter-gamut          — gamut-all semantic token adapter + plugin
-
-Feature Lab (working proofs)
-  editable-form-example     — validates via `ands validate`
-  gamut-form-example        — validates with gamut-all tokens
+Layer 4  Human Judgment     governance/COUNCIL.md, EXCEPTIONS.md
+Layer 3  Narrative           narrative-diff, narrative-browser, narrative-api
+Layer 2  Repo Tooling        guidelines, doc-gen, health, mcp-server
+Layer 1  Hard Enforcement    lint-rules, a11y-gate
+Layer 0  Contracts + CLI     contracts, ands-cli
+         Reference Libs      foundation-tokens, foundation-primitives, interaction-kit
 ```
 
-Strict boundary: Foundation → Interaction Kit → Feature Lab. Adapters import Foundation + Interaction Kit only. Core packages never depend on adapters.
-
----
-
-## CLI Quick Start
-
-```bash
-# Run via TypeScript (no build required)
-pnpm tsx packages/ands-cli/src/bin.ts <command>
-
-# Or after build
-node packages/ands-cli/dist/bin.js <command>
-```
-
-| Command | What it does |
-|---------|-------------|
-| `ands validate <file>` | Validate an intent file against its pattern schema |
-| `ands scaffold --pattern editable-form --output ./src/form --name my-form` | Generate boilerplate |
-| `ands audit-tokens` | Find hardcoded token values in source |
-| `ands schema` | List all patterns and commands at runtime |
-| `ands run <name> [args]` | Run a plugin command (e.g., from a DS adapter) |
-
-All output is JSON. Exit code `0` = success.
-
----
-
-## Agent Workflow
-
-1. Read `packages/interaction-kit/src/manifest.ts` — discover available patterns
-2. Read the pattern schema (e.g., `editable-form/schema.ts`) — understand the intent shape
-3. Write `intent.ts` satisfying the schema
-4. Run `ands validate ./src/intent.ts` in a loop until exit code 0
-
----
+**Key principle:** Layers only depend downward. `@ands/contracts` sits at the bottom with zero internal dependencies — every other package imports from it.
 
 ## Packages
 
-| Package | Purpose |
-|---------|---------|
-| [`@ands/contracts`](packages/contracts/) | Core types: `Result<T,E>`, `Brand<T,K>`, `AndsPlugin` |
-| [`@ands/foundation-tokens`](packages/foundation-tokens/) | DTCG token validation and CSS/TS build |
-| [`@ands/foundation-primitives`](packages/foundation-primitives/) | Accessible component contracts (Button, Input) |
-| [`@ands/interaction-kit`](packages/interaction-kit/) | Reusable UX patterns as schemas + state machines |
-| [`@ands/ands-cli`](packages/ands-cli/) | CLI governor tool |
-| [`ds-adapter-example`](examples/ds-adapter-example/) | Template for building a DS adapter |
-| [`ds-adapter-gamut`](examples/ds-adapter-gamut/) | gamut-all adapter + WCAG compliance plugin |
-| [`editable-form-example`](examples/feature-lab/editable-form-example/) | Working editable-form proof |
-| [`gamut-form-example`](examples/feature-lab/gamut-form-example/) | Working gamut-all form proof |
+### Engine (published)
+
+| Package | Description |
+|---------|-------------|
+| `@ands/contracts` | Core portability contracts: branded types, `Result<T,E>`, Zod helpers, plugin interface |
+| `@ands/ands-cli` | Governor CLI: validate, audit-tokens, scaffold, schema, init, lint, a11y, docs, audit, serve |
+
+### Reference Libraries (published)
+
+| Package | Description |
+|---------|-------------|
+| `@ands/foundation-tokens` | DTCG/W3C-compatible token authoring, validation, and build outputs |
+| `@ands/foundation-primitives` | Portable primitive contracts (Button, Input) with mandatory a11y at type level |
+| `@ands/interaction-kit` | Reusable UX flow patterns as Zod schemas and state machines |
+
+### Plugins (published)
+
+| Package | Description |
+|---------|-------------|
+| `@ands/lint-rules` | Lint rules: `no-raw-token-value`, `no-deprecated-prop`, `prop-naming-consistency` |
+| `@ands/a11y-gate` | A11y testing gate: static JSX checks, axe-core, lighthouse |
+| `@ands/guidelines` | Guideline registry: list, get, validate, add |
+| `@ands/doc-gen` | Documentation generator with stale-doc detection |
+| `@ands/health` | Design-system health metrics: token coverage, a11y rate, doc freshness |
+| `@ands/mcp-server` | MCP server exposing design-system resources |
+| `@ands/narrative-diff` | Diff summaries, drift detection, migration drafting |
+| `@ands/narrative-browser` | Visual and flow auditing via browser automation |
+| `@ands/narrative-api` | API surface analysis and field triage |
+
+### Examples
+
+| Directory | Description |
+|-----------|-------------|
+| `examples/ds-adapter-example` | Sample ds-adapter satisfying `AndsAdapter` |
+| `examples/ds-adapter-gamut` | Gamut design system adapter |
+| `examples/feature-lab` | Example features using interaction-kit patterns |
+| `examples/plugins/sample-plugin-config` | Living example of plugin configuration |
+
+## CLI Commands
+
+| Command | Description | Exit Codes |
+|---------|-------------|------------|
+| `ands validate <file>` | Validate an intent file against registered schemas | 0=valid, 4=invalid |
+| `ands audit-tokens` | Check for raw token values in source files | 0=clean, 4=violations |
+| `ands scaffold --pattern <p>` | Generate boilerplate for a pattern | 0=ok |
+| `ands schema [--config]` | Print registered schemas or resolved config | 0=ok |
+| `ands init` | Generate minimal `ands.config.ts` | 0=ok |
+| `ands lint` | Run lint rules (plugin) | 0=clean, 4=violations |
+| `ands a11y` | Run accessibility checks (plugin) | 0=clean, 4=violations |
+| `ands docs` | Generate documentation (plugin) | 0=ok |
+| `ands audit` | Run health metrics (plugin) | 0=healthy |
+| `ands serve` | Start MCP server (plugin) | 0=ok |
+| `ands guideline <sub>` | Manage guidelines (plugin) | 0=ok |
+
+All commands emit structured JSON to stdout when piped, human-readable output on TTY.
+
+## Extension Model
+
+ANDS is extended through the `AndsPlugin` interface:
+
+```ts
+// ands.config.ts
+import type { AndsConfig } from '@ands/contracts';
+
+export default {
+  adapter: '@mycompany/ds-adapter',
+  plugins: [myPlugin],
+} satisfies AndsConfig;
+```
+
+Plugins can contribute: patterns, commands, top-level commands, lint rules, a11y runners, doc sources, health metrics, MCP enrichments, and triage rules.
+
+## Development
+
+```bash
+pnpm install          # Install dependencies
+pnpm build            # Build all packages
+pnpm test             # Run all tests (Vitest)
+pnpm typecheck        # TypeScript strict check across all packages
+```
+
+## Governance
+
+- `governance/COUNCIL.md` — Open decisions requiring human judgment
+- `governance/EXCEPTIONS.md` — Approved exceptions to governance rules
+
+## License
+
+MIT

@@ -15,6 +15,7 @@
 import { ExitCode } from '../exit-codes.js';
 import { makeOutput, emitOutput } from '../output.js';
 import type { RuntimeRegistry } from '../registry.js';
+
 // Output schema $id — used as a reference in schema introspection output
 const OUTPUT_SCHEMA_ID = 'https://ands.dev/schemas/cli-output/v1.json';
 
@@ -49,16 +50,50 @@ const COMMAND_ARGS: Record<string, Record<string, { type: string; required: bool
   },
 };
 
+const TOP_LEVEL_PLUGIN_ARGS = {
+  '[...args]': {
+    type: 'string[]',
+    required: false,
+    description: 'Arguments forwarded to the plugin top-level command',
+  },
+};
+
+function listTopLevelCommands(registry: RuntimeRegistry) {
+  return Object.values(registry.topLevelCommands).map((command) => ({
+    name: command.name,
+    source: 'plugin' as const,
+    description: command.description,
+    args: TOP_LEVEL_PLUGIN_ARGS,
+    invocation: `ands ${command.name} [...args]`,
+  }));
+}
+
+function listRunCommands(registry: RuntimeRegistry) {
+  return Object.values(registry.commands).map((command) => ({
+    name: command.name,
+    description: command.description,
+    invocation: `ands run ${command.name} [...args]`,
+  }));
+}
+
 // ---------------------------------------------------------------------------
 // Command implementation
 // ---------------------------------------------------------------------------
 
 export async function runSchema(targetCommand: string | undefined, registry: RuntimeRegistry): Promise<number> {
   if (!targetCommand) {
-    // List all available commands
     const builtIn = Object.keys(COMMAND_ARGS);
-    const pluginCommands = Object.keys(registry.commands);
-    const allCommands = [...new Set([...builtIn, ...pluginCommands])];
+    const topLevelCommands = listTopLevelCommands(registry);
+    const allCommands = [
+      ...builtIn.map((name) => ({
+        name,
+        source: 'core' as const,
+        description: COMMAND_DESCRIPTIONS[name] ?? '',
+        args: COMMAND_ARGS[name] ?? {},
+        invocation: name === 'run' ? 'ands run <name> [...args]' : `ands ${name}`,
+      })),
+      ...topLevelCommands,
+    ];
 
     return emitOutput(
       makeOutput(
@@ -69,12 +104,8 @@ export async function runSchema(targetCommand: string | undefined, registry: Run
         [],
         {
           data: {
-            commands: allCommands.map(name => ({
-              name,
-              source: pluginCommands.includes(name) && !builtIn.includes(name) ? 'plugin' : 'core',
-              description: registry.commands[name]?.description ?? COMMAND_DESCRIPTIONS[name] ?? '',
-              args: COMMAND_ARGS[name] ?? {},
-            })),
+            commands: allCommands,
+            pluginRunCommands: listRunCommands(registry),
             patterns: registry.supportedKinds,
             outputSchema: { $ref: OUTPUT_SCHEMA_ID },
           },
@@ -84,9 +115,9 @@ export async function runSchema(targetCommand: string | undefined, registry: Run
   }
 
   const isBuiltIn = targetCommand in COMMAND_ARGS;
-  const isPlugin = targetCommand in registry.commands;
+  const isTopLevelPlugin = targetCommand in registry.topLevelCommands;
 
-  if (!isBuiltIn && !isPlugin) {
+  if (!isBuiltIn && !isTopLevelPlugin) {
     return emitOutput(
       makeOutput(
         'schema',
@@ -106,8 +137,10 @@ export async function runSchema(targetCommand: string | undefined, registry: Run
     );
   }
 
-  const args = COMMAND_ARGS[targetCommand] ?? {};
-  const pluginMeta = isPlugin ? { name: registry.commands[targetCommand]!.name, description: registry.commands[targetCommand]!.description } : null;
+  const args = isBuiltIn ? COMMAND_ARGS[targetCommand] ?? {} : TOP_LEVEL_PLUGIN_ARGS;
+  const description = isBuiltIn
+    ? COMMAND_DESCRIPTIONS[targetCommand] ?? ''
+    : registry.topLevelCommands[targetCommand]!.description;
 
   return emitOutput(
     makeOutput(
@@ -120,7 +153,7 @@ export async function runSchema(targetCommand: string | undefined, registry: Run
         data: {
           command: targetCommand,
           source: isBuiltIn ? 'core' : 'plugin',
-          description: pluginMeta?.description ?? COMMAND_DESCRIPTIONS[targetCommand] ?? '',
+          description,
           args,
           emits: { $ref: OUTPUT_SCHEMA_ID },
           exitCodes: {
@@ -132,6 +165,7 @@ export async function runSchema(targetCommand: string | undefined, registry: Run
             5: 'Internal CLI error (permanent)',
             6: 'Transient error (retry with exponential backoff)',
           },
+          ...(targetCommand === 'run' ? { pluginCommands: listRunCommands(registry) } : {}),
           ...(targetCommand === 'scaffold' ? { patterns: registry.supportedKinds } : {}),
         },
       },

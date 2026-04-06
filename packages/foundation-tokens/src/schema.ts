@@ -116,13 +116,7 @@ export const tokenGroupMetaSchema = z
 // Resolved token index (flat map: path → value)
 // ---------------------------------------------------------------------------
 
-/**
- * Flat map produced by the build step.
- * Keys are dot-separated paths (e.g. `"color.brand.primary"`).
- * Values are the resolved scalar values.
- *
- * Used by `ands audit-tokens` to identify off-system hardcoded values.
- */
-export type TokenIndex = Record<string, string | number>;
+// Canonical type is now in @ands/contracts — re-export for backwards compatibility.
+export type { TokenIndex } from '@ands/contracts';
 
 export const tokenIndexSchema = z.record(z.union([z.string(), z.number()]));

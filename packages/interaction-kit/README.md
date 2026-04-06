@@ -1,88 +1,91 @@
 # @ands/interaction-kit
 
-Reusable UX patterns as Zod schemas, state machines, and reducers. This is the primary agent entry point for understanding what features ANDS can build.
+A reference library of reusable UX flow patterns expressed as Zod schemas and TypeScript
+state machines. The recommended starting point for agents implementing ANDS features.
 
-**Why it matters:** Agents discover available patterns from `manifest.ts`, read the schema for the pattern they need, and write an `intent.ts` that satisfies it. No prose docs required — the schemas and JSDoc are the contract.
+## Description
 
----
+Provides a pattern manifest, intent schemas, and pure state machines for common
+interaction patterns. Agents write an intent file that satisfies a pattern schema,
+validate it with `ands validate`, and receive scaffolded or audited output. Patterns are
+portable — not tied to any UI framework or DS adapter.
 
-## Discovering Patterns
+This package occupies the Interaction Kit (Structural) layer: it may import from
+`@ands/contracts` and `@ands/foundation-tokens`, but must not import from Feature Lab
+or any specific DS adapter.
+
+## Agent workflow
+
+1. Read `src/manifest.ts` to discover available patterns and their file entrypoints.
+2. Read the pattern schema (e.g. `src/editable-form/schema.ts`) to understand intent shape.
+3. Write an intent file that satisfies the schema.
+4. Run `ands validate <intent-file>`, parse JSON output, fix issues, repeat.
+
+## Available patterns
+
+| Pattern ID | Stability | Description |
+|---|---|---|
+| `editable-form` | stable | Form that starts in view-only mode, switches to edit mode with validation, submission, error handling, and optional confirmation dialog |
+
+## Key exports
+
+| Export | Purpose |
+|---|---|
+| `PATTERN_MANIFEST` | Array of all registered patterns with entrypoints |
+| `PATTERN_IDS` | Array of valid `intent.kind` strings |
+| `findPattern` | Look up a `PatternManifestEntry` by ID |
+| `editableFormIntentSchema` | Zod schema used by `ands validate` |
+| `EditableFormIntent` | TypeScript type for editable-form intent objects |
+| `fieldSchema`, `formLogicSchema`, `formLayoutSchema` | Sub-schemas for intent composition |
+| `FIELD_TYPES` | Supported field type values |
+| `createInitialState` | Factory for the initial idle state |
+| `editableFormReducer` | Pure reducer: `(state, event) => state` |
+| `canSubmit`, `isLoading`, `getFieldErrors`, `getFormErrors` | State selector helpers |
+| `EditableFormState`, `EditableFormEvent` | Union types for all states and events |
+| `editableFormScaffoldFiles` | Scaffold template used by `ands scaffold` |
+
+## Usage example
 
 ```ts
-import { PATTERN_MANIFEST } from '@ands/interaction-kit';
+import {
+  PATTERN_MANIFEST,
+  findPattern,
+  createInitialState,
+  editableFormReducer,
+  canSubmit,
+  type EditableFormIntent,
+  type EditableFormEvent,
+} from '@ands/interaction-kit';
 
-// Each entry has: id, description, entrypoints[], cliKind, stability
-PATTERN_MANIFEST.forEach(p => console.log(p.id, p.description));
+// Discover patterns
+console.log(PATTERN_MANIFEST.map(p => p.id));
+// ['editable-form']
+
+// Look up a pattern to find its schema file
+const pattern = findPattern('editable-form');
+// pattern.entrypoints[0] => 'packages/interaction-kit/src/editable-form/schema.ts'
+
+// Use the state machine
+const intent: EditableFormIntent = { /* ...validated intent... */ };
+let state = createInitialState(intent);
+
+const event: EditableFormEvent = { type: 'START_EDIT' };
+state = editableFormReducer(state, event);
+
+if (canSubmit(state)) {
+  // dispatch submit event
+}
 ```
 
-Or via CLI:
-```bash
-ands schema
-```
-
----
-
-## Current Patterns
-
-### `editable-form` (stable)
-
-An inline-editable form pattern. User views data in read mode, clicks edit, modifies fields, saves or cancels.
-
-**Files:**
-- `src/editable-form/schema.ts` — the intent shape (fields, logic, layout)
-- `src/editable-form/state-machine.ts` — state and event union types
-- `src/editable-form/reducer.ts` — pure state transitions
-
-**Writing an intent:**
-
-```ts
-import type { EditableFormIntent } from '@ands/interaction-kit';
-
-export const intent: EditableFormIntent = {
-  kind: 'editable-form',
-  id: 'user-profile-form',
-  fields: [
-    { id: 'full-name', label: 'Full Name', type: 'text', required: true },
-    { id: 'email', label: 'Email', type: 'email', required: true },
-    { id: 'role', label: 'Role', type: 'select', options: [
-      { value: 'admin', label: 'Admin' },
-      { value: 'viewer', label: 'Viewer' },
-    ]},
-  ],
-  logic: {
-    onSuccess: 'toast',
-    successMessage: 'Profile updated.',
-    onValidationError: 'scroll-to-field',
-    onSubmitError: 'banner',
-  },
-};
-```
-
-**Validate:**
-```bash
-ands validate ./src/intent.ts
-```
-
-**State machine:**
-```
-idle → editing → validating → submitting → success
-                                         ↘ error → editing
-```
-
----
-
-## Scaffolding
-
-Generate boilerplate for a new feature:
+## CLI integration
 
 ```bash
-ands scaffold --pattern editable-form --output ./src/my-form --name my-form
-```
+# Validate an intent file
+pnpm tsx packages/ands-cli/src/bin.ts validate src/intent.ts
 
----
-
-## Install
-
-```bash
-pnpm add @ands/interaction-kit
+# Scaffold a new editable-form feature
+pnpm tsx packages/ands-cli/src/bin.ts scaffold \
+  --pattern editable-form \
+  --output src/features/profile \
+  --name profile
 ```

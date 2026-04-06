@@ -23,6 +23,13 @@
  */
 
 import type { ZodTypeAny } from 'zod';
+import type { TopLevelCommand } from './top-level-command.js';
+import type { AndsLintRule } from './lint.js';
+import type { A11yRunner } from './a11y.js';
+import type { DocSource } from './doc-gen.js';
+import type { HealthMetric } from './health.js';
+import type { McpEnrichment } from './mcp.js';
+import type { TriageRule } from './triage.js';
 
 // ---------------------------------------------------------------------------
 // Scaffold types
@@ -133,31 +140,20 @@ export interface AndsPlugin {
   patterns?: PatternRegistration[];
   /** New CLI commands contributed by this plugin (`ands run <name>`). */
   commands?: PluginCommand[];
+  /** Top-level CLI commands contributed by this plugin (`ands <name>`). */
+  topLevelCommands?: TopLevelCommand[];
+  /** Lint rules contributed by this plugin (for `ands lint`). */
+  lintRules?: AndsLintRule[];
+  /** A11y test runners contributed by this plugin (for `ands run a11y`). */
+  a11yRunners?: A11yRunner[];
+  /** Documentation sources contributed by this plugin (for `ands docs`). */
+  docSources?: DocSource[];
+  /** Health metrics contributed by this plugin (for `ands audit`). */
+  healthMetrics?: HealthMetric[];
+  /** MCP enrichments contributed by this plugin (for `ands serve`). */
+  mcpEnrichments?: McpEnrichment[];
+  /** Triage rules contributed by this plugin (for `ands api-surface`). */
+  triageRules?: TriageRule[];
 }
 
-// ---------------------------------------------------------------------------
-// Config file shape (ands.config.ts)
-// ---------------------------------------------------------------------------
-
-/**
- * Shape of the project-level `ands.config.ts` default export.
- *
- * The CLI looks for this file in `process.cwd()` at startup.
- * If absent, ANDS runs with core patterns only (no plugins).
- *
- * @example
- * ```ts
- * // ands.config.ts
- * import { gamutPlugin } from '@mycompany/ands-plugin-gamut';
- * export default {
- *   adapter: '@mycompany/my-ds',
- *   plugins: [gamutPlugin],
- * } satisfies AndsConfig;
- * ```
- */
-export interface AndsConfig {
-  /** Default adapter package name (used in scaffold --adapter default). */
-  adapter?: string;
-  /** Plugins to load at CLI startup. */
-  plugins?: AndsPlugin[];
-}
+// AndsConfig is now in config.ts — import from there

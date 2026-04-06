@@ -1,7 +1,7 @@
 {
   "name": "@ands/interaction-kit",
   "version": "0.1.0",
-  "description": "Reusable UX flow patterns as Zod schemas and state machines. Agents start here.",
+  "description": "Reference library: reusable UX flow patterns as Zod schemas and state machines. Agents start here.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

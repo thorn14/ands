@@ -1,66 +1,69 @@
 # @ands/foundation-primitives
 
-Portable component contracts for the ANDS system. Enforces accessibility requirements at the TypeScript type level, not just at runtime.
+A reference library of portable primitive contracts (Button, Input) with mandatory
+accessibility enforced at the type level. Not tied to any UI framework or component library.
 
-**Why it matters:** Every DS adapter must satisfy these contracts. This guarantees that any component tree built by an agent has valid accessible names — no silent a11y violations.
+## Description
 
----
+Defines the prop shapes and component contracts that DS adapters must satisfy. The core
+idea is that interactive elements cannot be created without an accessible name — this
+constraint is modeled as a discriminated union so TypeScript catches violations at
+compile time, before any runtime or audit tooling runs.
 
-## ButtonContract
+This package occupies the Foundation (Rigid) layer: it must not import from
+`@ands/interaction-kit` or any Feature Lab package.
 
-The `ButtonProps` type is a discriminated union. TypeScript will reject a button without an accessible name at compile time.
+## Key exports
+
+| Export | Purpose |
+|---|---|
+| `ButtonProps` | Discriminated union: one of `children`, `aria-label`, or `aria-labelledby` required |
+| `ButtonContract` | Interface a DS adapter's Button component must satisfy |
+| `ButtonVariant` | `'primary' \| 'secondary' \| 'ghost' \| 'destructive'` |
+| `ButtonSize` | `'sm' \| 'md' \| 'lg'` |
+| `validateButtonAccessibility` | Runtime validator — returns `{ valid }` or `{ valid, reason }` |
+| `InputProps` | Discriminated union requiring an accessible name for input elements |
+| `InputContract` | Interface a DS adapter's Input component must satisfy |
+| `InputType` | Supported HTML input type values |
+| `InputSize` | Size variants for inputs |
+| `validateInputAccessibility` | Runtime a11y validator for input props |
+
+## Usage example
 
 ```ts
-import type { ButtonProps } from '@ands/foundation-primitives';
-
-// Valid: visible text
-const btn: ButtonProps = { children: 'Save' };
-
-// Valid: icon button with aria-label
-const iconBtn: ButtonProps = { 'aria-label': 'Close dialog' };
-
-// Valid: aria-labelledby reference
-const labelledBtn: ButtonProps = { 'aria-labelledby': 'heading-id' };
-
-// TypeScript error: no accessible name
-const invalid: ButtonProps = { onClick: handleClick }; // ← compile error
-```
-
-Runtime validation is also available:
-
-```ts
+import type { ButtonProps, ButtonContract } from '@ands/foundation-primitives';
 import { validateButtonAccessibility } from '@ands/foundation-primitives';
 
-const result = validateButtonAccessibility(props);
+// Visible text — accessible name comes from children
+const submit: ButtonProps = { children: 'Submit', onClick: () => {} };
+
+// Icon button — no visible text, aria-label required
+const close: ButtonProps = { 'aria-label': 'Close dialog', onClick: () => {} };
+
+// Labeled by another element
+const ref: ButtonProps = { 'aria-labelledby': 'section-heading', onClick: () => {} };
+
+// TYPE ERROR at compile time — no accessible name
+// const bad: ButtonProps = { onClick: () => {} };
+
+// Runtime check (used by CLI audit)
+const check = validateButtonAccessibility({ onClick: () => {} });
+// { valid: false, reason: 'Button has no accessible name. Provide one of: ...' }
+
+// DS adapter implementation
+export const Button: ButtonContract = (props) => {
+  // map ButtonProps to your host component's props
+  return hostButton(mapProps(props));
+};
 ```
 
----
+## Accessibility contract model
 
-## InputContract
+Each interactive primitive uses a discriminated union with three branches:
 
-Same pattern for text inputs — requires an accessible label association.
+1. `children` present — visible text provides the accessible name (most common)
+2. `aria-label` present — for icon-only buttons or inputs
+3. `aria-labelledby` present — label lives elsewhere in the DOM
 
-```ts
-import type { InputProps } from '@ands/foundation-primitives';
-```
-
----
-
-## Writing an Adapter
-
-Your adapter wraps a host DS component and satisfies the contract:
-
-```ts
-import type { ButtonContract } from '@ands/foundation-primitives';
-import { AcmeButton } from 'acme-design-system';
-
-export const Button: ButtonContract = (props) => <AcmeButton {...props} />;
-```
-
----
-
-## Install
-
-```bash
-pnpm add @ands/foundation-primitives
-```
+Exactly one branch must match. TypeScript produces a compile error if none is satisfied.
+The `validate*Accessibility` helpers provide the same check at runtime for CLI audits.

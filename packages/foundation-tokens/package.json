@@ -16,6 +16,7 @@
     "build": "tsc --build && node --input-type=module --eval \"import('./dist/build.js').then(m => m.runBuild())\"",
     "build:tokens": "tsx src/build.ts",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "clean": "rm -rf dist tsconfig.tsbuildinfo"
   },
   "dependencies": {
