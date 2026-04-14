@@ -28,12 +28,30 @@
     "lighthouse": "^12.0.0"
   },
   "peerDependenciesMeta": {
-    "@axe-core/playwright": { "optional": true },
-    "playwright": { "optional": true },
-    "lighthouse": { "optional": true }
+    "@axe-core/playwright": {
+      "optional": true
+    },
+    "playwright": {
+      "optional": true
+    },
+    "lighthouse": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
     "typescript": "^5.4.5"
+  },
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/davidthorn/ands.git",
+    "directory": "packages/a11y-gate"
   }
 }
